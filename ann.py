@@ -17,6 +17,8 @@ class ANN:
 		N, D = X.shape
 		if len(Y.shape) == 1:
 			Y = self.y2indicator(Y)
+		elif Y.shape[1] == 1:
+			Y = self.y2indicator(np.squeeze(Y))
 		K = Y.shape[1]
 
 		self.initialize(D, K)
