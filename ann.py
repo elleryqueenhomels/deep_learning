@@ -38,13 +38,13 @@ class ANN:
 		L = len(self.layers)
 		for i in range(L):
 			if i == 0:
-				W = np.random.randn(D, self.layers[i])
+				W = np.random.randn(D, self.layers[i]) / np.sqrt(D + self.layers[i])
 			else:
-				W = np.random.randn(self.layers[i-1], self.layers[i])
+				W = np.random.randn(self.layers[i-1], self.layers[i]) / np.sqrt(self.layers[i-1] + self.layers[i])
 			self.W.append(W)
-			self.b.append(np.random.randn(self.layers[i]))
-		self.W.append(np.random.randn(self.layers[L-1], K))
-		self.b.append(np.random.randn(K))
+			self.b.append(np.zeros(self.layers[i]))
+		self.W.append(np.random.randn(self.layers[L-1], K) / np.sqrt(self.layers[L-1] + K))
+		self.b.append(np.zeros(K))
 
 	def backpropagation(self, T, Z, learning_rate):
 		# len(self.W) == len(Z) - 1 == len(self.layers) + 1; len(self.W) == len(self.b)
@@ -55,7 +55,7 @@ class ANN:
 			if self.activation_type == 1:
 				delta = delta.dot(self.W[i].T) * (Z[i] * (1 - Z[i]))
 			else:
-				delta = delta.dot(self.W[i].T) * ((1 + Z[i]) * (1 - Z[i]))
+				delta = delta.dot(self.W[i].T) * (1 - Z[i] * Z[i])
 
 	def forward(self, X):
 		Z = [X]
