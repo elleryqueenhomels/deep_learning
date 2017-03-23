@@ -7,11 +7,11 @@ class ANN:
 		self.layers = layers
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, layers=None, activation_type=1, learning_rate=10e-7, epochs=20000):
+	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-7, epochs=20000):
 		if layers != None:
 			self.layers = layers
 		assert(self.layers != None)
-		if self.activation_type != activation_type:
+		if activation_type != None:
 			self.activation_type = activation_type
 
 		N, D = X.shape
