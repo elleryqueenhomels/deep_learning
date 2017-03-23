@@ -36,8 +36,8 @@ def experiment2():
 	Xtrain, Ytrain = X[:Ntrain], Y[:Ntrain]
 	Xtest, Ytest = X[Ntrain:], Y[Ntrain:]
 
-	# so far the best hyperparameters: layers=[30,30,30,30], activation_type=1, learning_rate=10e-5
-	model = ANN(layers=[30,30,30,30], activation_type=1)
+	# For MNIST Dataset the best hyperparameters: layers=[50], activation_type=2, learning_rate=10e-5, epochs=2000
+	model = ANN(layers=[30,30,30,30], activation_type=2)
 	model.fit(Xtrain, Ytrain, learning_rate=10e-5, epochs=10000)
 	with open(MODEL_PATH, 'wb') as f:
 		pickle.dump(model, f)
