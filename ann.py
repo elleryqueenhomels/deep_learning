@@ -31,7 +31,8 @@ class ANN:
 			self.backpropagation(Y, Z, learning_rate)
 			# for debug:
 			if i % 100 == 0:
-				print('%d:' % i, 'score =', self.classification_rate(np.argmax(Y, axis=1), np.argmax(Z[-1], axis=1)))
+				score = self.classification_rate(np.argmax(Y, axis=1), np.argmax(Z[-1], axis=1))
+				print('%d:' % i, 'score = %.8f%%' % (score * 100))
 
 	def initialize(self, D, K):
 		self.W = []
