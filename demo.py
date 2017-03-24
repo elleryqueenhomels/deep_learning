@@ -1,9 +1,11 @@
 import numpy as np
 import pickle
 from ann import ANN
-from util import get_data
+from util import get_data, get_facial_data
+from datetime import datetime
 
-MODEL_PATH = 'C:\\Users\\Administrator\\Desktop\\python\\ann_model.pkl'
+TRAIN_MODE = True
+MODEL_PATH = '/Users/WenGao_Ye/Desktop/deep_learning/ann_model_facial.pkl'
 
 def experiment1():
 	import matplotlib.pyplot as plt
@@ -25,23 +27,40 @@ def experiment1():
 
 	model = ANN(layers=[5,6,7,6,5], activation_type=1)
 	model.fit(X, Y, learning_rate=10e-5, epochs=10000)
-	print('Final score:', model.score(X, Y))
+	print('\nFinal score: %.8f%%' % (model.score(X, Y) * 100))
 
 # experiment on MNIST dataset.
 def experiment2():
+	print('\nBegin to extract data.')
+	t0 = datetime.now()
 	X, Y = get_data()
-	print('\nX.shape =', X.shape, '; Y.shape =', Y.shape, '\n')
+	# X, Y = get_facial_data()
+	print('\nFinish extracting data. Time:', (datetime.now() - t0))
+	print('\nX.shape =', X.shape, '; Y.shape =', Y.shape)
 
 	Ntrain = int(len(Y) / 4)
 	Xtrain, Ytrain = X[:Ntrain], Y[:Ntrain]
 	Xtest, Ytest = X[Ntrain:], Y[Ntrain:]
 
-	# For MNIST Dataset the best hyperparameters: layers=[50], activation_type=1, learning_rate=10e-5, epochs=2000
-	model = ANN(layers=[30,30,30,30], activation_type=1)
-	model.fit(Xtrain, Ytrain, learning_rate=10e-5, epochs=10000)
-	with open(MODEL_PATH, 'wb') as f:
-		pickle.dump(model, f)
-	print('Final score:', model.score(Xtest, Ytest))
+	if TRAIN_MODE:
+		# For MNIST Dataset the best hyperparameters: layers=[100], activation_type=1, learning_rate=10e-5, epochs=5000
+		model = ANN(layers=[100], activation_type=1)
+		print('\nBegin to training model.')
+		t0 = datetime.now()
+		model.fit(Xtrain, Ytrain, learning_rate=10e-5, epochs=5000)
+		print('\nTraining time:', (datetime.now() - t0), 'Train size:', len(Ytrain))
+
+		with open(MODEL_PATH, 'wb') as f:
+			pickle.dump(model, f)
+		print('\nSave model successfully! Model type:', type(model))
+	else:
+		with open(MODEL_PATH, 'rb') as f:
+			model = pickle.load(f)
+	
+	print('\nBegin to testing model.')
+	t0 = datetime.now()
+	print('\nTest accuracy: %.8f%%' % (model.score(Xtest, Ytest) * 100))
+	print('Test time:', (datetime.now() - t0), 'Test size:', len(Ytest), '\n')
 
 
 if __name__ == '__main__':
