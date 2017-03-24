@@ -68,11 +68,13 @@ class ANN:
 		return Z
 
 	def predict(self, X):
+		if len(X.shape) == 1:
+			X = X.reshape(-1, 1)
 		return np.argmax(self.forward(X)[-1], axis=1)
 
 	def score(self, X, Y):
 		P = self.predict(X)
-		return np.mean(P == Y)
+		return np.mean(Y == P)
 
 	def classification_rate(self, Y, P):
 		return np.mean(Y == P)
