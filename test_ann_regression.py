@@ -40,6 +40,9 @@ def experiment2():
 	plt.scatter(X[:,2], X[:,0])
 	plt.show()
 	# looks pretty linear!
+	
+	Y = X[:,0]
+	X = X[:,1:]
 
 
 if __name__ == '__main__':
