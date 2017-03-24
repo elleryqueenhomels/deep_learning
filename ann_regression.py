@@ -1,8 +1,8 @@
-# Artificial Neural Network for Classification
+# Artificial Neural Network for Regression
 import numpy as np
 
 
-class ANN:
+class ANN_Regression:
 	def __init__(self, layers=None, activation_type=1):
 		self.layers = layers
 		self.activation_type = activation_type
@@ -13,14 +13,12 @@ class ANN:
 		assert(self.layers != None)
 		if activation_type != None:
 			self.activation_type = activation_type
-		
+
 		if len(X.shape) == 1:
 			X = X.reshape(-1, 1)
 		N, D = X.shape
 		if len(Y.shape) == 1:
-			Y = self.y2indicator(Y)
-		elif Y.shape[1] == 1:
-			Y = self.y2indicator(np.squeeze(Y))
+			Y = Y.reshape(-1, 1)
 		K = Y.shape[1]
 
 		self.initialize(D, K)
@@ -31,7 +29,7 @@ class ANN:
 			self.backpropagation(Y, Z, learning_rate)
 			# for debug:
 			if i % 100 == 0:
-				score = self.classification_rate(np.argmax(Y, axis=1), np.argmax(Z[-1], axis=1))
+				score = self.r_squared(Y, Z[-1])
 				print('%d:' % i, 'score = %.8f%%' % (score * 100))
 
 	def initialize(self, D, K):
@@ -65,36 +63,27 @@ class ANN:
 		L = len(self.layers) # len(self.layers) == len(self.W) - 1
 		for i in range(L):
 			Z.append(self.activation(Z[i].dot(self.W[i]) + self.b[i]))
-		Z.append(self.softmax(Z[L].dot(self.W[L]) + self.b[L]))
+		Z.append(Z[L].dot(self.W[L]) + self.b[L])
 		return Z
 
 	def predict(self, X):
 		if len(X.shape) == 1:
 			X = X.reshape(-1, 1)
-		return np.argmax(self.forward(X)[-1], axis=1)
+		return np.squeeze(self.forward(X)[-1])
 
 	def score(self, X, Y):
-		P = self.predict(X)
-		return np.mean(Y == P)
+		Yhat = self.predict(X)
+		return self.r_squared(Y, Yhat)
 
-	def classification_rate(self, Y, P):
-		return np.mean(Y == P)
+	def r_squared(self, Y, Yhat):
+		Y = np.squeeze(Y)
+		Yhat = np.squeeze(Yhat)
+		Y1 = Y - Yhat
+		Y2 = Y - Y.mean()
+		return 1 - Y1.dot(Y1) / Y2.dot(Y2)
 
 	def activation(self, a):
 		if self.activation_type == 1:
 			return np.tanh(a)
 		else:
 			return 1 / (1 + np.exp(-a))
-
-	def softmax(self, a):
-		expA = np.exp(a)
-		return expA / expA.sum(axis=1, keepdims=True)
-
-	def y2indicator(self, Y):
-		N = len(Y)
-		K = len(set(Y))
-		T = np.zeros((N, K))
-		# for i in range(N):
-		# 	T[i, int(Y[i])] = 1
-		T[np.arange(N), Y.astype(np.int32)] = 1
-		return T
