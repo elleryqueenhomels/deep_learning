@@ -23,7 +23,7 @@ def experiment1():
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
-	model = ANN(layers=[5,6,7,6,5], activation_type=2)
+	model = ANN(layers=[5,6,7,6,5], activation_type=1)
 	model.fit(X, Y, learning_rate=10e-5, epochs=10000)
 	print('Final score:', model.score(X, Y))
 
@@ -37,7 +37,7 @@ def experiment2():
 	Xtest, Ytest = X[Ntrain:], Y[Ntrain:]
 
 	# For MNIST Dataset the best hyperparameters: layers=[50], activation_type=2, learning_rate=10e-5, epochs=2000
-	model = ANN(layers=[30,30,30,30], activation_type=2)
+	model = ANN(layers=[30,30,30,30], activation_type=1)
 	model.fit(Xtrain, Ytrain, learning_rate=10e-5, epochs=10000)
 	with open(MODEL_PATH, 'wb') as f:
 		pickle.dump(model, f)
