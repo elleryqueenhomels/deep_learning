@@ -1,4 +1,4 @@
-# Artificial Neural Network
+# Artificial Neural Network for Classification
 import numpy as np
 
 
