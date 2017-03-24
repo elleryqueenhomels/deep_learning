@@ -13,7 +13,9 @@ class ANN:
 		assert(self.layers != None)
 		if activation_type != None:
 			self.activation_type = activation_type
-
+		
+		if len(X.shape) == 1:
+			X = X.reshape(-1, 1)
 		N, D = X.shape
 		if len(Y.shape) == 1:
 			Y = self.y2indicator(Y)
