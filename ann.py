@@ -53,9 +53,9 @@ class ANN:
 			self.W[i] -= learning_rate * Z[i].T.dot(delta)
 			self.b[i] -= learning_rate * delta.sum(axis=0)
 			if self.activation_type == 1:
-				delta = delta.dot(self.W[i].T) * (Z[i] * (1 - Z[i]))
-			else:
 				delta = delta.dot(self.W[i].T) * (1 - Z[i] * Z[i])
+			else:
+				delta = delta.dot(self.W[i].T) * (Z[i] * (1 - Z[i]))
 
 	def forward(self, X):
 		Z = [X]
@@ -77,9 +77,9 @@ class ANN:
 
 	def activation(self, a):
 		if self.activation_type == 1:
-			return 1 / (1 + np.exp(-a))
-		else:
 			return np.tanh(a)
+		else:
+			return 1 / (1 + np.exp(-a))
 
 	def softmax(self, a):
 		expA = np.exp(a)
