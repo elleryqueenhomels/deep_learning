@@ -7,7 +7,7 @@ class ANN_Regression:
 		self.layers = layers
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-7, epochs=20000, regularization1=0, regularization2=0):
+	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-5, epochs=20000, regularization1=0, regularization2=0):
 		if layers != None:
 			self.layers = layers
 		assert(self.layers != None)
