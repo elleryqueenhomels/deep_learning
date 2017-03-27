@@ -69,7 +69,7 @@ def experiment3():
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
-	model = ANN([10], activation_type=1) # 5 units or more
+	model = ANN([10], activation_type=1) # 5 hidden units or more
 	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
 	print('\nIn XOR: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
 
@@ -81,7 +81,7 @@ def experiment4():
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
-	model = ANN([8], activation_type=1) # 8 units or more
+	model = ANN([8], activation_type=1) # 8 hidden units or more
 	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
 	print('\nIn Donut: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
 
