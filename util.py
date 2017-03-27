@@ -25,7 +25,7 @@ def get_xor():
     return X, Y
 
 def get_donut():
-    N = 200
+    N = 1000
     R_inner = 5
     R_outer = 10
     half_N = int(N / 2)

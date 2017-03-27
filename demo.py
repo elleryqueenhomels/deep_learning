@@ -1,15 +1,13 @@
 import numpy as np
 import pickle
 from ann import ANN
-from util import get_data, get_facial_data
+from util import get_data, get_facial_data, get_xor, get_donut
 from datetime import datetime
 
 TRAIN_MODE = True
 MODEL_PATH = '/Users/WenGao_Ye/Desktop/deep_learning/ann_model_facial.pkl'
 
 def experiment1():
-	import matplotlib.pyplot as plt
-
 	Nclass = 500
 	D = 2 # dimensionality of input
 	M = 3 # hidden layer size
@@ -21,7 +19,8 @@ def experiment1():
 	X = np.vstack([X1, X2, X3])
 
 	Y = np.array([0]*Nclass + [1]*Nclass + [2]*Nclass)
-
+	
+	# import matplotlib.pyplot as plt
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
@@ -61,6 +60,30 @@ def experiment2():
 	t0 = datetime.now()
 	print('\nTest accuracy: %.8f%%' % (model.score(Xtest, Ytest) * 100))
 	print('Test time:', (datetime.now() - t0), 'Test size:', len(Ytest), '\n')
+
+def experiment3():
+	X, Y = get_xor()
+	X, Y = shuffle(X, Y)
+
+	# import matplotlib.pyplot as plt
+	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
+	# plt.show()
+
+	model = ANN([10], activation_type=1) # 5 hidden units or more
+	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
+	print('\nIn XOR: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
+
+def experiment4():
+	X, Y = get_donut()
+	X, Y = shuffle(X, Y)
+
+	# import matplotlib.pyplot as plt
+	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
+	# plt.show()
+
+	model = ANN([8], activation_type=1) # 8 hidden units or more
+	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
+	print('\nIn Donut: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
 
 
 if __name__ == '__main__':
