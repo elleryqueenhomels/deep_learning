@@ -2,10 +2,11 @@ import numpy as np
 import pickle
 from ann import ANN
 from util import get_data, get_facial_data, get_xor, get_donut
+from sklearn.utils import shuffle
 from datetime import datetime
 
 TRAIN_MODE = True
-MODEL_PATH = '/Users/WenGao_Ye/Desktop/deep_learning/ann_model_facial.pkl'
+MODEL_PATH = '/Users/WenGao_Ye/Desktop/trained_model/ann_model_facial.pkl'
 
 def experiment1():
 	Nclass = 500
@@ -87,4 +88,4 @@ def experiment4():
 
 
 if __name__ == '__main__':
-	experiment2()
+	experiment3()
