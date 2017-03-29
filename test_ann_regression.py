@@ -16,6 +16,7 @@ def experiment1():
 	Xnorm = (X - X.mean()) / X.std()
 
 	model = ANN_Regression([100], activation_type=1)
+	# if use ReLU as activation function, learning rate should be less than 10e-6.
 	# if overflow in fit() function, use learning_rate=10e-6 or less.
 	model.fit(Xnorm, Y, learning_rate=10e-5, epochs=20000)
 	print('\nFinal score: %.8f%%' % (model.score(Xnorm, Y) * 100), '\n')
