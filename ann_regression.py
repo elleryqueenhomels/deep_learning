@@ -2,7 +2,7 @@
 import numpy as np
 
 
-class ANN_Regression:
+class ANN_Regression(object):
 	def __init__(self, layers=None, activation_type=1):
 		self.layers = layers
 		self.activation_type = activation_type
@@ -25,8 +25,12 @@ class ANN_Regression:
 
 		# training: Backpropagation
 		for i in range(epochs):
+			# forward propagation
 			Z = self.forward(X)
+			
+			# gradient descent step
 			self.backpropagation(Y, Z, learning_rate, regularization1, regularization2)
+			
 			# for debug:
 			if i % 100 == 0:
 				score = self.r_squared(Y, Z[-1])
@@ -55,6 +59,8 @@ class ANN_Regression:
 			self.b[i] -= (learning_rate * delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i])
 			if self.activation_type == 1:
 				delta = delta.dot(self.W[i].T) * (1 - Z[i] * Z[i])
+			elif self.activation_type == 2:
+				delta = delta.dot(self.W[i].T) * (Z[i] > 0)
 			else:
 				delta = delta.dot(self.W[i].T) * (Z[i] * (1 - Z[i]))
 
@@ -85,5 +91,7 @@ class ANN_Regression:
 	def activation(self, a):
 		if self.activation_type == 1:
 			return np.tanh(a)
+		elif self.activation_type == 2:
+			return a * (a > 0)
 		else:
 			return 1 / (1 + np.exp(-a))
