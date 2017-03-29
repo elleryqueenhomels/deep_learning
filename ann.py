@@ -57,8 +57,8 @@ class ANN(object):
 		# len(self.W) == len(Z) - 1 == len(self.layers) + 1; len(self.W) == len(self.b)
 		delta = Z[-1] - T # Z[-1] is output Y
 		for i in reversed(range(len(self.W))):
-			self.W[i] -= (learning_rate * Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i])
-			self.b[i] -= (learning_rate * delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i])
+			self.W[i] -= learning_rate * (Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i])
+			self.b[i] -= learning_rate * (delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i])
 			if self.activation_type == 1:
 				delta = delta.dot(self.W[i].T) * (1 - Z[i] * Z[i])
 			elif self.activation_type == 2:
