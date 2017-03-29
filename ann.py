@@ -27,8 +27,12 @@ class ANN(object):
 
 		# training: Backpropagation
 		for i in range(epochs):
+			# forward propagation
 			Z = self.forward(X)
+			
+			# gradient descent step
 			self.backpropagation(Y, Z, learning_rate, regularization1, regularization2)
+			
 			# for debug:
 			if i % 100 == 0:
 				score = self.classification_rate(np.argmax(Y, axis=1), np.argmax(Z[-1], axis=1))
