@@ -25,8 +25,12 @@ class ANN_Regression(object):
 
 		# training: Backpropagation
 		for i in range(epochs):
+			# forward propagation
 			Z = self.forward(X)
+			
+			# gradient descent step
 			self.backpropagation(Y, Z, learning_rate, regularization1, regularization2)
+			
 			# for debug:
 			if i % 100 == 0:
 				score = self.r_squared(Y, Z[-1])
