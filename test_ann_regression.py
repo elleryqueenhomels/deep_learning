@@ -21,7 +21,7 @@ def experiment1():
 	# The best setting so far:
 	# model = ANN_Regression([100,100], activation_type=1)
 	# model.fit(Xnorm, Y, epochs=6000, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
-	model.fit(Xnorm, Y, epochs=6000, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
+	model.fit(Xnorm, Y, epochs=6000, batch_size=500, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
 	print('\nFinal score: %.8f%%' % (model.score(Xnorm, Y) * 100), '\n')
 
 	Yhat = model.predict(Xnorm)
