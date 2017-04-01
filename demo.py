@@ -6,7 +6,7 @@ from sklearn.utils import shuffle
 from datetime import datetime
 
 TRAIN_MODE = True
-MODEL_PATH = '/Users/WenGao_Ye/Desktop/trained_model/ann_model_facial.pkl'
+MODEL_PATH = '/Users/WenGao_Ye/Desktop/trained_model/ann_model_mnist_optimal.pkl'
 
 def experiment1():
 	Nclass = 500
@@ -43,11 +43,13 @@ def experiment2():
 	Xtest, Ytest = X[Ntrain:], Y[Ntrain:]
 
 	if TRAIN_MODE:
-		# For MNIST Dataset the best hyperparameters: layers=[100], activation_type=1, learning_rate=10e-5, epochs=5000
+		# For MNIST Dataset the best hyperparameters: layers=[300], activation_type=2,
+		# epochs=500, batch_size=500, learning_rate=10e-4, decay=0.99, momentum=0.9, regularization2=0.01
 		model = ANN(layers=[100], activation_type=1)
 		print('\nBegin to training model.')
 		t0 = datetime.now()
-		model.fit(Xtrain, Ytrain, learning_rate=10e-5, epochs=5000)
+		# for MNIST: lr=10e-4, for Facial: lr=10e-5, using ReLU as activation both.
+		model.fit(Xtrain, Ytrain, epochs=500, batch_size=500, learning_rate=10e-4, decay=0.99, momentum=0.9, regularization2=0.01)
 		print('\nTraining time:', (datetime.now() - t0), 'Train size:', len(Ytrain))
 
 		with open(MODEL_PATH, 'wb') as f:
@@ -70,8 +72,8 @@ def experiment3():
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
-	model = ANN([10], activation_type=1) # 5 hidden units or more
-	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
+	model = ANN([10, 10], activation_type=1) # 5 hidden units or more
+	model.fit(X, Y, epochs=10000, learning_rate=10e-4, decay=0.99, momentum=0.9, regularization2=0.01)
 	print('\nIn XOR: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
 
 def experiment4():
@@ -82,10 +84,11 @@ def experiment4():
 	# plt.scatter(X[:,0], X[:,1], c=Y, s=50, alpha=0.5)
 	# plt.show()
 
-	model = ANN([8], activation_type=1) # 8 hidden units or more
-	model.fit(X, Y, learning_rate=10e-5, epochs=100000)
+	model = ANN([10, 10], activation_type=1) # 8 hidden units or more
+	# model.fit(X, Y, epochs=10000, batch_size=100, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
+	model.fit(X, Y, epochs=1000, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
 	print('\nIn Donut: final score = %.8f%%' % (model.score(X, Y) * 100), '\n')
 
 
 if __name__ == '__main__':
-	experiment3()
+	experiment2()
