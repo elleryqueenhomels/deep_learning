@@ -175,6 +175,10 @@ class ANN(object):
 		Y = np.squeeze(Y)
 		P = np.squeeze(P)
 		return np.mean(Y == P)
+	
+	
+	def cost(self, T, Y):
+		return -np.log(Y[np.arange(len(T)), T.astype(np.int32)]).sum()
 
 
 	def activation(self, a):
