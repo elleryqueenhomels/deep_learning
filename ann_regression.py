@@ -21,9 +21,9 @@ class ANN_Regression(object):
 		if len(Y.shape) == 1:
 			Y = Y.reshape(-1, 1)
 		K = Y.shape[1]
-
+		
 		self.initialize(D, K)
-
+		
 		if batch_size > 0 and batch_size < N:
 			# training: Backpropagation, using batch gradient descent
 			n_batches = int(N / batch_size)
