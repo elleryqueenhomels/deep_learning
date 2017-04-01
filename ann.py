@@ -30,13 +30,12 @@ class ANN(object):
 			# training: Backpropagation, using batch gradient descent
 			n_batches = int(N / batch_size)
 			for i in range(epochs):
+				idx = np.arange(N)
+				np.random.shuffle(idx)
 				for j in range(n_batches):
-					if j == n_batches - 1:
-						Xbatch = X[j*batch_size:]
-						Ybatch = Y[j*batch_size:]
-					else:
-						Xbatch = X[j*batch_size:(j*batch_size + batch_size)]
-						Ybatch = Y[j*batch_size:(j*batch_size + batch_size)]
+					batch_idx = idx[j*batch_size:(j*batch_size + batch_size)]
+					Xbatch = X[batch_idx]
+					Ybatch = Y[batch_idx]
 
 					# forward propagation
 					Z = self.forward(Xbatch)
