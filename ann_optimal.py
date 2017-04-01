@@ -1,4 +1,4 @@
-# Artificial Neural Network for Classification, With: mini-batch, RMSprop(adaptive learning rate), Nesterov Momentum
+# Artificial Neural Network for Classification, With: mini-batch, RMSprop(adaptive learning rate), Nesterov Momentum, regularization(L1 & L2)
 import numpy as np
 
 
