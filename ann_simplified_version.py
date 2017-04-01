@@ -1,6 +1,6 @@
 # Artificial Neural Network for Classification (a simplified version)
-# using full gradient descent, NO adaptive learning rate & momentum.
-# but still has regularization (L1 & L2)
+# Using full gradient descent, NO adaptive learning rate & momentum
+# But still has regularization (L1 & L2)
 import numpy as np
 
 
