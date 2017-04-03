@@ -91,4 +91,4 @@ def experiment4():
 
 
 if __name__ == '__main__':
-	experiment4()
+	experiment2()
