@@ -19,7 +19,7 @@ def experiment1():
 	# if use ReLU as activation function, learning rate should be 10e-6 or less.
 	# if overflow in fit() function, use learning_rate=10e-6 or less.
 	# The best setting so far:
-	# model = ANN_Regression([100,100, 100], activation_type=1)
+	# model = ANN_Regression([100, 100, 100], activation_type=1)
 	# model.fit(Xnorm, Y, epochs=6000, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
 	# for Regression: Neural Network deep is better than fat.
 	model.fit(Xnorm, Y, epochs=6000, batch_size=500, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01, debug=True, valid_set=[Xnorm[:200], Y[:200]])
