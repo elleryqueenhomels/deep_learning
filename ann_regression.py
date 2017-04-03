@@ -8,25 +8,46 @@ class ANN_Regression(object):
 		self.activation_type = activation_type
 
 
-	def fit(self, X, Y, layers=None, activation_type=None, epochs=10000, batch_size=0, learning_rate=10e-5, decay=0, momentum=0, regularization1=0, regularization2=0):
-		if layers != None:
-			self.layers = layers
+	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-5, decay=0, momentum=0, regularization1=0, regularization2=0, debug=False, debug_points=100, valid_set=None):
 		assert(self.layers != None)
-		if activation_type != None:
-			self.activation_type = activation_type
-		
+
 		if len(X.shape) == 1:
 			X = X.reshape(-1, 1)
-		N, D = X.shape
 		if len(Y.shape) == 1:
 			Y = Y.reshape(-1, 1)
+
+		# for debug: pre-process training set and validation set
+		if debug:
+			Ytrain = Y
+			if valid_set != None:
+				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
+					valid_set = None
+				else:
+					if len(valid_set[0].shape) == 1:
+						valid_set[0] = valid_set[0].reshape(-1, 1)
+					if len(valid_set[1].shape) == 1:
+						valid_set[1] = valid_set[1].reshape(-1, 1)
+					if valid_set[0].shape[1] != X.shape[1] or valid_set[1].shape[1] != Y.shape[1]:
+						valid_set = None
+					else:
+						Xvalid, Yvalid = valid_set[0], valid_set[1]
+
+		N, D = X.shape
 		K = Y.shape[1]
 		
 		self.initialize(D, K)
-		
+
+		if debug:
+			costs_train, costs_valid = [], []
+			scores_train, scores_valid = [], []
+
 		if batch_size > 0 and batch_size < N:
 			# training: Backpropagation, using batch gradient descent
 			n_batches = int(N / batch_size)
+			if debug:
+				debug_points = int(np.sqrt(debug_points))
+				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
+
 			for i in range(epochs):
 				idx = np.arange(N)
 				np.random.shuffle(idx)
@@ -42,11 +63,26 @@ class ANN_Regression(object):
 					self.backpropagation(Ybatch, Z, learning_rate, decay, momentum, regularization1, regularization2)
 
 					# for debug:
-					if i % 100 == 0:
-						score = self.r_squared(Ybatch, Z[-1])
-						print('iteration=%d, batch=%d:' % (i, j), 'score = %.8f%%' % (score * 100))
+					if debug:
+						if i % print_epoch == 0 and j % print_batch == 0:
+							pYtrain = self.forward(X)[-1]
+							ctrain = self.cost(Ytrain, pYtrain)
+							strain = self.r_squared(Ytrain, pYtrain)
+							costs_train.append(ctrain)
+							scores_train.append(strain)
+							print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
+							if valid_set != None:
+								pYvalid = self.forward(Xvalid)[-1]
+								cvalid = self.cost(Yvalid, pYvalid)
+								svalid = self.r_squared(Yvalid, pYvalid)
+								costs_valid.append(cvalid)
+								scores_valid.append(svalid)
+								print('epoch=%d, batch=%d, n_batches=%d: cost_valid=%s, score_valid=%.6f%%' % (i, j, n_batches, cvalid, svalid*100))
 		else:
 			# training: Backpropagation, using full gradient descent
+			if debug:
+				print_epoch = max(int(epochs / debug_points), 1)
+
 			for i in range(epochs):
 				# forward propagation
 				Z = self.forward(X)
@@ -55,9 +91,50 @@ class ANN_Regression(object):
 				self.backpropagation(Y, Z, learning_rate, decay, momentum, regularization1, regularization2)
 
 				# for debug:
-				if i % 100 == 0:
-					score = self.r_squared(Y, Z[-1])
-					print('iteration=%d:' % i, 'score = %.8f%%' % (score * 100))
+				if debug:
+					if i % print_epoch == 0:
+						pYtrain = self.forward(X)[-1]
+						ctrain = self.cost(Ytrain, pYtrain)
+						strain = self.r_squared(Ytrain, pYtrain)
+						costs_train.append(ctrain)
+						scores_train.append(strain)
+						print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
+						if valid_set != None:
+							pYvalid = self.forward(Xvalid)[-1]
+							cvalid = self.cost(Yvalid, pYvalid)
+							svalid = self.r_squared(Yvalid, pYvalid)
+							costs_valid.append(cvalid)
+							scores_valid.append(svalid)
+							print('epoch=%d: cost_valid=%s, score_valid=%.6f%%' % (i, cvalid, svalid*100))
+
+		if debug:
+			pYtrain = self.forward(X)[-1]
+			ctrain = self.cost(Ytrain, pYtrain)
+			strain = self.r_squared(Ytrain, pYtrain)
+			costs_train.append(ctrain)
+			scores_train.append(strain)
+			print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Ytrain)))
+			if valid_set != None:
+				pYvalid = self.forward(Xvalid)[-1]
+				cvalid = self.cost(Yvalid, pYvalid)
+				svalid = self.r_squared(Yvalid, pYvalid)
+				costs_valid.append(cvalid)
+				scores_valid.append(svalid)
+				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
+
+			import matplotlib.pyplot as plt
+			plt.plot(costs_train, label='training set')
+			if valid_set != None:
+				plt.plot(costs_valid, label='validation set')
+			plt.title('Squared-Error Cost')
+			plt.legend()
+			plt.show()
+			plt.plot(scores_train, label='training set')
+			if valid_set != None:
+				plt.plot(scores_valid, label='validation set')
+			plt.title('R-Squared')
+			plt.legend()
+			plt.show()
 
 
 	def initialize(self, D, K):
