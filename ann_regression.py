@@ -36,7 +36,7 @@ class ANN_Regression(object):
 		K = Y.shape[1]
 		
 		self.initialize(D, K)
-
+		
 		if debug:
 			costs_train, costs_valid = [], []
 			scores_train, scores_valid = [], []
