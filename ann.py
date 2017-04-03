@@ -125,15 +125,17 @@ class ANN(object):
 				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
 
 			import matplotlib.pyplot as plt
-			plt.plot(costs_train, label='training set')
+			X_points = len(costs_train)
+			X_plot = np.linspace(0, X_points/100.0, X_points)
+			plt.plot(X_plot, costs_train, label='training set')
 			if valid_set != None:
-				plt.plot(costs_valid, label='validation set')
+				plt.plot(X_plot, costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
-			plt.plot(scores_train, label='training set')
+			plt.plot(X_plot, scores_train, label='training set')
 			if valid_set != None:
-				plt.plot(scores_valid, label='validation set')
+				plt.plot(X_plot, scores_valid, label='validation set')
 			plt.title('Classification Rate')
 			plt.legend()
 			plt.show()
@@ -254,7 +256,7 @@ class ANN(object):
 	
 	
 	def cost(self, T, Y):
-		return -np.log(Y[np.arange(len(T)), T.astype(np.int32)]).sum()
+		return -np.log(Y[np.arange(len(T)), T.astype(np.int32)]).mean()
 
 
 	def activation(self, a):
