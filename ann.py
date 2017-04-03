@@ -47,7 +47,7 @@ class ANN(object):
 			# training: Backpropagation, using batch gradient descent
 			n_batches = int(N / batch_size)
 			if debug:
-				debug_points = int(np.sqrt(debug_points))
+				debug_points = np.sqrt(debug_points)
 				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
 
 			for i in range(epochs):
@@ -125,17 +125,15 @@ class ANN(object):
 				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
 
 			import matplotlib.pyplot as plt
-			X_points = len(costs_train)
-			X_plot = np.linspace(0, X_points/100.0, X_points)
-			plt.plot(X_plot, costs_train, label='training set')
+			plt.plot(costs_train, label='training set')
 			if valid_set != None:
-				plt.plot(X_plot, costs_valid, label='validation set')
+				plt.plot(costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
-			plt.plot(X_plot, scores_train, label='training set')
+			plt.plot(scores_train, label='training set')
 			if valid_set != None:
-				plt.plot(X_plot, scores_valid, label='validation set')
+				plt.plot(scores_valid, label='validation set')
 			plt.title('Classification Rate')
 			plt.legend()
 			plt.show()
