@@ -231,7 +231,7 @@ class ANN(object):
 
 	def forward(self, X):
 		X = X.astype(np.float32)
-		thX = theano.fmatrix('X')
+		thX = T.fmatrix('X')
 		pY = self.th_forward(thX)
 		forward_op = theano.function(inputs=[thX], outputs=[pY])
 		return forward_op(X)
