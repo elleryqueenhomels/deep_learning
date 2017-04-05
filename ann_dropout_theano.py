@@ -1,0 +1,282 @@
+# ANN in Theano, with: batch SGD, RMSprop, Nesterov momentum, dropout regularization
+# A GPU accelerated Theano code version, using float32
+# THEANO_FLAGS=mode=FAST_RUN,floatX=float32,device=gpu python3 ann_theano.py
+# Or just simply use this in the code file:
+# import os
+# os.environ['THEANO_FLAGS'] = 'mode=FAST_RUN,floatX=float32,device=gpu'
+# import theano
+# By the way, except explicitly using np.float32, we could also use dtype=theano.config.floatX
+
+import numpy as np
+import theano
+import theano.tensor as T
+
+from theano.tensor.shared_randomstreams import RandomStreams
+from sklearn.utils import shuffle # If no sklean installed, just use: _shuffle
+
+
+class HiddenLayer(object):
+	def __init__(self, M1, M2, activation_type=1):
+		self.activation_type = activation_type
+		W, b = init_weight_and_bias(M1, M2)
+		self.W = theano.shared(W)
+		self.b = theano.shared(b)
+		self.params = [self.W, self.b]
+
+	def forward(self, X):
+		if self.activation_type == 1:
+			return T.nnet.relu(X.dot(self.W) + self.b)
+		elif self.activation_type == 2:
+			return T.tanh(X.dot(self.W) + self.b)
+		else:
+			return T.nnet.sigmoid(X.dot(self.W) + self.b)
+
+
+class ANN(object):
+	def __init__(self, hidden_layer_sizes, p_keep, activation_type=1):
+		self.hidden_layer_sizes = hidden_layer_sizes
+		self.dropout_rates = np.array(p_keep, dtype=np.float32)
+		self.activation_type = activation_type
+
+	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-6, decay=0, momentum=0, eps=10e-10, debug=False, debug_points=100, valid_set=None):
+		# for GPU accelerated, using float32
+		learning_rate = np.float32(learning_rate)
+		decay = np.float32(decay)
+		mu = np.float32(momentum)
+		eps = np.float32(eps)
+		one = np.float32(1)
+
+		# pre-process X, Y
+		if len(X.shape) == 1:
+			X = X.reshape(-1, 1)
+		if len(Y.shape) == 2:
+			if Y.shape[1] == 1:
+				Y = np.squeeze(Y)
+			else:
+				Y = np.argmax(Y, axis=1)
+		X = X.astype(np.float32)
+		Y = Y.astype(np.int32)
+
+		self.rng = RandomStreams()
+
+		# for debug: pre-process training set and validation set
+		if debug:
+			if valid_set != None:
+				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
+					valid_set = None
+				else:
+					if len(valid_set[0].shape) == 1:
+						valid_set[0] = valid_set[0].reshape(-1, 1)
+					if valid_set[0].shape[1] != X.shape[1]:
+						valid_set = None
+					else:
+						Xvalid, Yvalid = valid_set[0], np.squeeze(valid_set[1])
+						if len(Yvalid.shape) == 2:
+							Yvalid = np.argmax(Yvalid, axis=1)
+						Xvalid = Xvalid.astype(np.float32)
+						Yvalid = Yvalid.astype(np.int32)
+
+		# initialize hidden layers
+		N, D = X.shape
+		K = len(set(Y))
+		self.hidden_layers = []
+		M1 = D
+		for M2 in self.hidden_layer_sizes:
+			h = HiddenLayer(M1, M2, self.activation_type)
+			self.hidden_layers.append(h)
+			M1 = M2
+		W, b = init_weight_and_bias(M1, K)
+		self.W = theano.shared(W)
+		self.b = theano.shared(b)
+
+		# collect params for later use
+		self.params = [self.W, self.b]
+		for h in reversed(self.hidden_layers):
+			self.params += h.params
+
+		# set up theano variables and functions
+		thX = T.fmatrix('X')
+		thY = T.ivector('Y')
+
+		# this cost is for training
+		pY_train = self.forward_train(thX)
+		cost = -T.mean(T.log(pY_train[T.arange(thY.shape[0]), thY]))
+
+		# this is for calculating the output cost and prediction
+		pY_predict = self.forward_predict(thX)
+		cost_predict = -T.mean(T.log(pY_predict[T.arange(thY.shape[0]), thY]))
+
+		prediction = self.th_predict(thX)
+		cost_predict_op = theano.function(inputs=[thX, thY], outputs=[cost_predict, prediction])
+
+		updates = []
+		if decay > 0 and decay < 1:
+			# for RMSprop
+			cache = [theano.shared(np.zeros(p.get_value().shape, dtype=np.float32)) for p in self.params]
+			if mu > 0:
+				# for momentum
+				dparams = [theano.shared(np.zeros(p.get_value().shape, dtype=np.float32)) for p in self.params]
+				for c, dp, p in zip(cache, dparams, self.params):
+					updates += [
+						(c, decay*c + (one - decay)*T.grad(cost, p)*T.grad(cost, p)),
+						(dp, mu*mu*dp - (one + mu)*learning_rate*T.grad(cost, p)/T.sqrt(c + eps)),
+						(p, p + dp)
+					]
+			else:
+				for c, p in zip(cache, self.params):
+					updates += [
+						(c, decay*c + (one - decay)*T.grad(cost, p)*T.grad(cost, p)),
+						(p, p - learning_rate*T.grad(cost, p)/T.sqrt(c + eps))
+					]
+		else:
+			if mu > 0:
+				# for momentum
+				dparams = [theano.shared(np.zeros(p.get_value().shape, dtype=np.float32)) for p in self.params]
+				for dp, p in zip(dparams, self.params):
+					updates += [
+						(dp, mu*mu*dp - (one + mu)*learning_rate*T.grad(cost, p)),
+						(p, p + dp)
+					]
+			else:
+				updates = [(p, p - learning_rate*T.grad(cost, p)) for p in self.params]
+
+		train_op = theano.function(inputs=[thX, thY], updates=updates)
+
+		if debug:
+			costs_train, costs_valid = [], []
+			scores_train, scores_valid = [], []
+
+		if batch_size > 0 and batch_size < N:
+			# training: Backpropagation, using batch gradient descent
+			n_batches = int(N / batch_size)
+			if debug:
+				debug_points = np.sqrt(debug_points)
+				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
+
+			for i in range(epochs):
+				X, Y = shuffle(X, Y) # if no sklearn, just use: _shuffle(X, Y)
+				for j in range(n_batches):
+					Xbatch = X[j*batch_size:(j*batch_size+batch_size)]
+					Ybatch = Y[j*batch_size:(j*batch_size+batch_size)]
+
+					train_op(Xbatch, Ybatch)
+
+					# for debug:
+					if debug:
+						if i % print_epoch == 0 and j % print_batch == 0:
+							ctrain, pYtrain = cost_predict_op(X, Y)
+							strain = classification_rate(Y, pYtrain)
+							costs_train.append(ctrain)
+							scores_train.append(strain)
+							print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
+							if valid_set != None:
+								cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
+								svalid = classification_rate(Yvalid, pYvalid)
+								costs_valid.append(cvalid)
+								scores_valid.append(svalid)
+								print('epoch=%d, batch=%d, n_batches=%d: cost_valid=%s, score_valid=%.6f%%' % (i, j, n_batches, cvalid, svalid*100))
+		else:
+			# training: Backpropagation, using full gradient descent
+			if debug:
+				print_epoch = max(int(epochs / debug_points), 1)
+
+			for i in range(epochs):
+				train_op(X, Y)
+
+				# for debug:
+				if debug:
+					if i % print_epoch == 0:
+						ctrain, pYtrain = cost_predict_op(X, Y)
+						strain = classification_rate(Y, pYtrain)
+						costs_train.append(ctrain)
+						scores_train.append(strain)
+						print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
+						if valid_set != None:
+							cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
+							svalid = classification_rate(Yvalid, pYvalid)
+							costs_valid.append(cvalid)
+							scores_valid.append(svalid)
+							print('epoch=%d: cost_valid=%s, score_valid=%.6f%%' % (i, cvalid, svalid*100))
+
+		if debug:
+			ctrain, pYtrain = cost_predict_op(X, Y)
+			strain = classification_rate(Y, pYtrain)
+			costs_train.append(ctrain)
+			scores_train.append(strain)
+			print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Y)))
+			if valid_set != None:
+				cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
+				svalid = classification_rate(Yvalid, pYvalid)
+				costs_valid.append(cvalid)
+				scores_valid.append(svalid)
+				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
+
+			import matplotlib.pyplot as plt
+			plt.plot(costs_train, label='training set')
+			if valid_set != None:
+				plt.plot(costs_valid, label='validation set')
+			plt.title('Cross-Entropy Cost')
+			plt.legend()
+			plt.show()
+			plt.plot(scores_train, label='training set')
+			if valid_set != None:
+				plt.plot(scores_valid, label='validation set')
+			plt.title('Classification Rate')
+			plt.legend()
+			plt.show()
+
+
+	def forward_train(self, X):
+		Z = X
+		for h, p in zip(self.hidden_layers, self.dropout_rates[:-1]):
+			mask = self.rng.binomial(n=1, p=p, size=Z.shape, dtype='float32')
+			Z = mask * Z
+			Z = h.forward(Z)
+		mask = self.rng.binomial(n=1, p=self.dropout_rates[-1], size=Z.shape, dtype='float32')
+		Z = mask * Z
+		return T.nnet.softmax(Z.dot(self.W) + self.b)
+
+	def forward_predict(self, X):
+		Z = X
+		for h, p in zip(self.hidden_layers, self.dropout_rates[:-1]):
+			Z = h.forward(p * Z)
+		return T.nnet.softmax((self.dropout_rates[-1] * Z).dot(self.W) + self.b)
+
+	def th_predict(self, X):
+		pY = self.forward_predict(X)
+		return T.argmax(pY, axis=1)
+
+	def forward(self, X):
+		X = X.astype(np.float32)
+		thX = T.fmatrix('X')
+		pY = self.forward_predict(thX)
+		forward_op = theano.function(inputs=[thX], outputs=[pY])
+		return forward_op(X)
+
+	def predict(self, X):
+		X = X.astype(np.float32)
+		thX = T.fmatrix('X')
+		prediction = self.th_predict(thX)
+		predict_op = theano.function(inputs=[thX], outputs=[prediction])
+		return predict_op(X)
+
+	def score(self, X, Y):
+		pY = self.predict(X)
+		return np.mean(Y == pY)
+
+
+def init_weight_and_bias(M1, M2):
+	M1, M2 = int(M1), int(M2)
+	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
+	b = np.zeros(M2)
+	return W.astype(np.float32), b.astype(np.float32)
+
+def classification_rate(targets, predictions):
+	return np.mean(targets == predictions)
+
+# just in case you have not installed sklearn
+def _shuffle(X, Y):
+	assert(len(X) == len(Y))
+	idx = np.arange(len(Y))
+	np.random.shuffle(idx)
+	return X[idx], Y[idx]
