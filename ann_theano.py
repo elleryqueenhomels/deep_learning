@@ -75,6 +75,7 @@ class ANN(object):
 		# initialize hidden layers
 		N, D = X.shape
 		K = len(set(Y))
+
 		self.hidden_layers = []
 		M1 = D
 		for M2 in self.hidden_layer_sizes:
@@ -94,10 +95,12 @@ class ANN(object):
 		thX = T.fmatrix('X')
 		thY = T.ivector('Y')
 		pY = self.th_forward(thX)
+		self.forward_op = theano.function(inputs=[thX], outputs=pY)
 
 		reg_cost = reg * T.sum([(p * p).sum() for p in self.params])
 		cost = -T.mean(T.log(pY[T.arange(thY.shape[0]), thY])) + reg_cost
 		prediction = self.th_predict(thX)
+		self.predict_op = theano.function(inputs=[thX], outputs=prediction)
 
 		# cost and prediction operation
 		cost_predict_op = theano.function(inputs=[thX, thY], outputs=[cost, prediction])
@@ -231,17 +234,11 @@ class ANN(object):
 
 	def forward(self, X):
 		X = X.astype(np.float32)
-		thX = T.fmatrix('X')
-		pY = self.th_forward(thX)
-		forward_op = theano.function(inputs=[thX], outputs=[pY])
-		return forward_op(X)
+		return self.forward_op(X)
 
 	def predict(self, X):
 		X = X.astype(np.float32)
-		thX = T.fmatrix('X')
-		prediction = self.th_predict(thX)
-		predict_op = theano.function(inputs=[thX], outputs=[prediction])
-		return predict_op(X)
+		return self.predict_op(X)
 
 	def score(self, X, Y):
 		pY = self.predict(X)
