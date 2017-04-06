@@ -79,6 +79,7 @@ class ANN(object):
 		# initialize hidden layers
 		N, D = X.shape
 		K = len(set(Y))
+
 		self.hidden_layers = []
 		M1 = D
 		for M2 in self.hidden_layer_sizes:
@@ -105,9 +106,11 @@ class ANN(object):
 		# this is for calculating the output cost and prediction
 		pY_predict = self.forward_predict(thX)
 		cost_predict = -T.mean(T.log(pY_predict[T.arange(thY.shape[0]), thY]))
+		self.forward_op = theano.function(inputs=[thX], outputs=pY_predict)
 
 		prediction = self.th_predict(thX)
 		cost_predict_op = theano.function(inputs=[thX, thY], outputs=[cost_predict, prediction])
+		self.predict_op = theano.function(inputs=[thX], outputs=prediction)
 
 		updates = []
 		if decay > 0 and decay < 1:
@@ -248,17 +251,11 @@ class ANN(object):
 
 	def forward(self, X):
 		X = X.astype(np.float32)
-		thX = T.fmatrix('X')
-		pY = self.forward_predict(thX)
-		forward_op = theano.function(inputs=[thX], outputs=[pY])
-		return forward_op(X)
+		return self.forward_op(X)
 
 	def predict(self, X):
 		X = X.astype(np.float32)
-		thX = T.fmatrix('X')
-		prediction = self.th_predict(thX)
-		predict_op = theano.function(inputs=[thX], outputs=[prediction])
-		return predict_op(X)
+		return self.predict_op(X)
 
 	def score(self, X, Y):
 		pY = self.predict(X)
