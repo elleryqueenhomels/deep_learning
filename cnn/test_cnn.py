@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.io import loadmat
 from sklearn.utils import shuffle
-# from utils import shuffle # If no sklearn installed, using this shuffle() instead
+# from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
 from utils import rearrange
 from datetime import datetime
 
