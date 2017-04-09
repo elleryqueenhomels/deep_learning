@@ -7,6 +7,7 @@ import theano.tensor as T
 from theano.tensor.nnet import conv2d
 from theano.tensor.signal.pool import pool_2d
 from sklearn.utils import shuffle
+# from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
 
 
 class ConvPoolLayer(object):
@@ -312,3 +313,4 @@ def init_weight_and_bias(M1, M2):
 
 def classification_rate(T, P):
 	return np.mean(T == P)
+
