@@ -1,4 +1,4 @@
-# CNN in Theano, with: RMSprop, Nesterov Momentum, L2 Regularization
+# CNN in Theano, with: mini-batch SGD, RMSprop, Nesterov Momentum, L2 Regularization
 
 import numpy as np
 import theano
