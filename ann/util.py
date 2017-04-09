@@ -4,7 +4,7 @@ from sklearn.utils import shuffle
 
 def get_data(limit=None):
     print("Reading in and transforming data...")
-    df = pd.read_csv('../python_test/data_set/MNIST_train.csv')
+    df = pd.read_csv('../../python_test/data_set/MNIST_train.csv')
     data = df.as_matrix()
     np.random.shuffle(data)
     X = data[:, 1:] / 255.0 # data is from 0..255
@@ -48,7 +48,7 @@ def get_facial_data(balance_ones=False):
     Y = []
     X = []
     first = True
-    for line in open('../python_test/data_set/fer2013.csv'):
+    for line in open('../../python_test/data_set/fer2013.csv'):
         if first:
             first = False # skip the first line which is a header.
         else:
