@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
-from ann import ANN
+from ann_theano import ANN
+from ann_theano import classification_rate
 from util import get_data, get_facial_data, get_xor, get_donut
 from sklearn.utils import shuffle
 from datetime import datetime
@@ -45,16 +46,17 @@ def experiment2():
 	if TRAIN_MODE:
 		# For MNIST Dataset the best hyperparameters: layers=[300], activation_type=2,
 		# epochs=500, batch_size=500, learning_rate=10e-4, decay=0.99, momentum=0.9, regularization2=0.01
-		model = ANN(layers=[300], activation_type=2)
+		# model = ANN([300], p_keep=[0.8,0.5], activation_type=1)
+		model = ANN([300, 100], activation_type=1)
 		print('\nBegin to training model.')
 		t0 = datetime.now()
 		# for MNIST: lr=10e-4, for Facial: lr=10e-5, using ReLU as activation both.
-		model.fit(Xtrain, Ytrain, epochs=500, batch_size=500, learning_rate=10e-4, decay=0.99, momentum=0.9, regularization2=0.01, debug=True, debug_points=200, valid_set=[Xtest[:1000], Ytest[:1000]])
+		model.fit(Xtrain, Ytrain, epochs=50, batch_size=500, learning_rate=10e-5, decay=0.99, momentum=0.9, reg=0.01, debug=True, debug_points=10, valid_set=[Xtest[:1000], Ytest[:1000]])
 		print('\nTraining time:', (datetime.now() - t0), 'Train size:', len(Ytrain))
 
-		with open(MODEL_PATH, 'wb') as f:
-			pickle.dump(model, f)
-		print('\nSave model successfully! Model type:', type(model))
+		# with open(MODEL_PATH, 'wb') as f:
+		# 	pickle.dump(model, f)
+		# print('\nSave model successfully! Model type:', type(model))
 	else:
 		with open(MODEL_PATH, 'rb') as f:
 			model = pickle.load(f)
@@ -63,6 +65,19 @@ def experiment2():
 	t0 = datetime.now()
 	print('\nTest accuracy: %.8f%%' % (model.score(Xtest, Ytest) * 100))
 	print('Test time:', (datetime.now() - t0), 'Test size:', len(Ytest), '\n')
+
+	P = model.predict(X)
+	print('Predict attempt: %.6f%%, predict shape: %s, predict size: %d\n' % (classification_rate(Y, P)*100, P.shape, len(X)))
+
+	print('Test model.forward()!')
+	pY = model.forward(X)
+	print('\nAfter forward(), pY.shape =', pY.shape, ', type:', type(pY))
+	arg = np.argmax(pY, axis=1)
+	print('np.argmax(pY, axis=1) =', arg, ', type:', type(arg))
+	print('P =', P, 'type:', type(P))
+	print('np.mean(np.argmax(pY, axis=1) == P) =', np.mean(arg == P))
+	assert(np.mean(np.argmax(pY, axis=1) == P) == 1)
+	print('\nPass the assert(). model.forward() operates successfully!\n')
 
 def experiment3():
 	X, Y = get_xor()
