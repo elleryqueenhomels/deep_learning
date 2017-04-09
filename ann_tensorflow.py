@@ -47,7 +47,7 @@ class ANN(object):
 		N, D = X.shape
 		K = Y.shape[1]
 
-		# for debug: pre-process training set and validation set
+		# for debug: pre-process validation set
 		if debug:
 			if valid_set != None:
 				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
