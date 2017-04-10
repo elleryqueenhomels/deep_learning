@@ -8,7 +8,7 @@ class ANN_Regression(object):
 		self.activation_type = activation_type
 
 
-	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-5, decay=0, momentum=0, regularization1=0, regularization2=0, debug=False, debug_points=100, valid_set=None):
+	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-5, decay=0, momentum=0, regularization1=0, regularization2=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		assert(self.layers != None)
 
 		if len(X.shape) == 1:
@@ -18,7 +18,8 @@ class ANN_Regression(object):
 
 		# for debug: pre-process training set and validation set
 		if debug:
-			Ytrain = Y
+			if cal_train:
+				Ytrain = Y
 			if valid_set != None:
 				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
 					valid_set = None
@@ -31,6 +32,7 @@ class ANN_Regression(object):
 						valid_set = None
 					else:
 						Xvalid, Yvalid = valid_set[0], valid_set[1]
+			debug = cal_train or (valid_set != None)
 
 		N, D = X.shape
 		K = Y.shape[1]
@@ -65,12 +67,13 @@ class ANN_Regression(object):
 					# for debug:
 					if debug:
 						if i % print_epoch == 0 and j % print_batch == 0:
-							pYtrain = self.forward(X)[-1]
-							ctrain = self.cost(Ytrain, pYtrain)
-							strain = self.r_squared(Ytrain, pYtrain)
-							costs_train.append(ctrain)
-							scores_train.append(strain)
-							print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
+							if cal_train:
+								pYtrain = self.forward(X)[-1]
+								ctrain = self.cost(Ytrain, pYtrain)
+								strain = self.r_squared(Ytrain, pYtrain)
+								costs_train.append(ctrain)
+								scores_train.append(strain)
+								print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
 							if valid_set != None:
 								pYvalid = self.forward(Xvalid)[-1]
 								cvalid = self.cost(Yvalid, pYvalid)
@@ -93,12 +96,13 @@ class ANN_Regression(object):
 				# for debug:
 				if debug:
 					if i % print_epoch == 0:
-						pYtrain = self.forward(X)[-1]
-						ctrain = self.cost(Ytrain, pYtrain)
-						strain = self.r_squared(Ytrain, pYtrain)
-						costs_train.append(ctrain)
-						scores_train.append(strain)
-						print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
+						if cal_train:
+							pYtrain = self.forward(X)[-1]
+							ctrain = self.cost(Ytrain, pYtrain)
+							strain = self.r_squared(Ytrain, pYtrain)
+							costs_train.append(ctrain)
+							scores_train.append(strain)
+							print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
 						if valid_set != None:
 							pYvalid = self.forward(Xvalid)[-1]
 							cvalid = self.cost(Yvalid, pYvalid)
@@ -108,12 +112,13 @@ class ANN_Regression(object):
 							print('epoch=%d: cost_valid=%s, score_valid=%.6f%%' % (i, cvalid, svalid*100))
 
 		if debug:
-			pYtrain = self.forward(X)[-1]
-			ctrain = self.cost(Ytrain, pYtrain)
-			strain = self.r_squared(Ytrain, pYtrain)
-			costs_train.append(ctrain)
-			scores_train.append(strain)
-			print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Ytrain)))
+			if cal_train:
+				pYtrain = self.forward(X)[-1]
+				ctrain = self.cost(Ytrain, pYtrain)
+				strain = self.r_squared(Ytrain, pYtrain)
+				costs_train.append(ctrain)
+				scores_train.append(strain)
+				print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Ytrain)))
 			if valid_set != None:
 				pYvalid = self.forward(Xvalid)[-1]
 				cvalid = self.cost(Yvalid, pYvalid)
@@ -123,13 +128,15 @@ class ANN_Regression(object):
 				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
 
 			import matplotlib.pyplot as plt
-			plt.plot(costs_train, label='training set')
+			if cal_train:
+				plt.plot(costs_train, label='training set')
 			if valid_set != None:
 				plt.plot(costs_valid, label='validation set')
 			plt.title('Squared-Error Cost')
 			plt.legend()
 			plt.show()
-			plt.plot(scores_train, label='training set')
+			if cal_train:
+				plt.plot(scores_train, label='training set')
 			if valid_set != None:
 				plt.plot(scores_valid, label='validation set')
 			plt.title('R-Squared')
