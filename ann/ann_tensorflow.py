@@ -28,7 +28,7 @@ class ANN(object):
 		self.hidden_layer_sizes = hidden_layer_sizes
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-6, decay=0, momentum=0, reg=0, debug=False, debug_points=100, valid_set=None):
+	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-6, decay=0, momentum=0, reg=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		learning_rate = np.float32(learning_rate)
 		decay = np.float32(decay)
 		mu = np.float32(momentum)
@@ -66,6 +66,7 @@ class ANN(object):
 						Xvalid = Xvalid.astype(np.float32)
 						Yvalid = Yvalid.astype(np.float32)
 						Yvalid_flat = np.argmax(Yvalid, axis=1)
+			debug = cal_train or (valid_set != None)
 
 		# initialize hidden layers
 		self.hidden_layers = []
@@ -124,12 +125,13 @@ class ANN(object):
 					# for debug:
 					if debug:
 						if i % print_epoch == 0 and j % print_batch == 0:
-							ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
-							pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
-							strain = classification_rate(Ytrain, pYtrain)
-							costs_train.append(ctrain)
-							scores_train.append(strain)
-							print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
+							if cal_train:
+								ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
+								pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
+								strain = classification_rate(Ytrain, pYtrain)
+								costs_train.append(ctrain)
+								scores_train.append(strain)
+								print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
 							if valid_set != None:
 								cvalid = self.session.run(cost, feed_dict={self.tfX: Xvalid, self.tfY: Yvalid})
 								pYvalid = self.session.run(prediction, feed_dict={self.tfX: Xvalid})
@@ -149,12 +151,13 @@ class ANN(object):
 				# for debug:
 				if debug:
 					if i % print_epoch == 0:
-						ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
-						pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
-						strain = classification_rate(Ytrain, pYtrain)
-						costs_train.append(ctrain)
-						scores_train.append(strain)
-						print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
+						if cal_train:
+							ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
+							pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
+							strain = classification_rate(Ytrain, pYtrain)
+							costs_train.append(ctrain)
+							scores_train.append(strain)
+							print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
 						if valid_set != None:
 							cvalid = self.session.run(cost, feed_dict={self.tfX: Xvalid, self.tfY: Yvalid})
 							pYvalid = self.session.run(prediction, feed_dict={self.tfX: Xvalid})
@@ -164,12 +167,13 @@ class ANN(object):
 							print('epoch=%d: cost_valid=%s, score_valid=%.6f%%' % (i, cvalid, svalid*100))
 
 		if debug:
-			ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
-			pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
-			strain = classification_rate(np.argmax(Y, axis=1), pYtrain)
-			costs_train.append(ctrain)
-			scores_train.append(strain)
-			print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Y)))
+			if cal_train:
+				ctrain = self.session.run(cost, feed_dict={self.tfX: X, self.tfY: Y})
+				pYtrain = self.session.run(prediction, feed_dict={self.tfX: X})
+				strain = classification_rate(np.argmax(Y, axis=1), pYtrain)
+				costs_train.append(ctrain)
+				scores_train.append(strain)
+				print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Y)))
 			if valid_set != None:
 				cvalid = self.session.run(cost, feed_dict={self.tfX: Xvalid, self.tfY: Yvalid})
 				pYvalid = self.session.run(prediction, feed_dict={self.tfX: Xvalid})
@@ -179,13 +183,15 @@ class ANN(object):
 				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
 
 			import matplotlib.pyplot as plt
-			plt.plot(costs_train, label='training set')
+			if cal_train:
+				plt.plot(costs_train, label='training set')
 			if valid_set != None:
 				plt.plot(costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
-			plt.plot(scores_train, label='training set')
+			if cal_train:
+				plt.plot(scores_train, label='training set')
 			if valid_set != None:
 				plt.plot(scores_valid, label='validation set')
 			plt.title('Classification Rate')
