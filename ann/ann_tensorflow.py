@@ -114,7 +114,7 @@ class ANN(object):
 
 			for i in range(epochs):
 				X, Y = shuffle(X, Y) # if no sklearn, just use: _shuffle(X, Y)
-				if debug:
+				if debug and cal_train:
 					Ytrain = np.argmax(Y, axis=1)
 				for j in range(n_batches):
 					Xbatch = X[j*batch_size:(j*batch_size+batch_size)]
@@ -143,7 +143,8 @@ class ANN(object):
 			# training: Backpropagation, using full gradient descent
 			if debug:
 				print_epoch = max(int(epochs / debug_points), 1)
-				Ytrain = np.argmax(Y, axis=1)
+				if cal_train:
+					Ytrain = np.argmax(Y, axis=1)
 
 			for i in range(epochs):
 				self.session.run(train_op, feed_dict={self.tfX: X, self.tfY: Y})
