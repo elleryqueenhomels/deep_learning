@@ -3,8 +3,8 @@
 import numpy as np
 import tensorflow as tf
 
-# from sklearn.utils import shuffle
-from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
+from sklearn.utils import shuffle
+# from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
 
 
 class ConvPoolLayer(object):
@@ -230,21 +230,21 @@ class CNN(object):
 				scores_valid.append(svalid)
 				print('Final validation: cost_valid=%s, score_valid=%.6f%%, valid_size=%d' % (cvalid, svalid*100, len(Yvalid)))
 
-			# import matplotlib.pyplot as plt
-			# if cal_train:
-			# 	plt.plot(costs_train, label='training set')
-			# if valid_set != None:
-			# 	plt.plot(costs_valid, label='validation set')
-			# plt.title('Cross-Entropy Cost')
-			# plt.legend()
-			# plt.show()
-			# if cal_train:
-			# 	plt.plot(scores_train, label='training set')
-			# if valid_set != None:
-			# 	plt.plot(scores_valid, label='validation set')
-			# plt.title('Classification Rate')
-			# plt.legend()
-			# plt.show()
+			import matplotlib.pyplot as plt
+			if cal_train:
+				plt.plot(costs_train, label='training set')
+			if valid_set != None:
+				plt.plot(costs_valid, label='validation set')
+			plt.title('Cross-Entropy Cost')
+			plt.legend()
+			plt.show()
+			if cal_train:
+				plt.plot(scores_train, label='training set')
+			if valid_set != None:
+				plt.plot(scores_valid, label='validation set')
+			plt.title('Classification Rate')
+			plt.legend()
+			plt.show()
 
 	def th_forward(self, X):
 		Z = X
@@ -265,6 +265,7 @@ class CNN(object):
 		tfX = tf.placeholder(tf.float32, shape=X.shape, name='X')
 		forward_op = self.th_forward(tfX)
 		session = tf.Session()
+		session.run(tf.global_variables_initializer())
 		return session.run(forward_op, feed_dict={tfX: X})
 
 	def predict(self, X):
@@ -272,6 +273,7 @@ class CNN(object):
 		tfX = tf.placeholder(tf.float32, shape=X.shape, name='X')
 		predict_op = self.th_predict(tfX)
 		session = tf.Session()
+		session.run(tf.global_variables_initializer())
 		return session.run(predict_op, feed_dict={tfX: X})
 
 	def score(self, X, Y):
