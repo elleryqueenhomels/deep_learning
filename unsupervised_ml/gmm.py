@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal as mvn
 
 
-def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
+def gmm(X, K, max_iter=100, smoothing=10e-3, eps=1e-12, show_plots=True):
 	N, D = X.shape
 	M = np.zeros((K, D))
 	R = np.zeros((N, K))
@@ -34,7 +34,8 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
 
 		# a faster method to do step 1: vectorize
 		for k in range(K):
-			weighted_pdfs[:,k] = pi[k] * mvn.pdf(X, M[k], C[k])
+			# weighted_pdfs[:,k] = pi[k] * mvn.pdf(X, M[k], C[k])
+			weighted_pdfs[:,k] = pi[k] * mvn.pdf(X, M[k], C[k]) + eps # adding an eps to avoid any row being all zeros
 
 		R = weighted_pdfs / weighted_pdfs.sum(axis=1, keepdims=True)
 
@@ -60,7 +61,7 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
 		costs[i] = -np.log(weighted_pdfs.sum(axis=1)).sum()
 		if i > 0:
 			if np.abs(costs[i] - costs[i-1]) < 10e-7:
-				print('\nBreak early at %d iterations\n' % (i+1))
+				print('\nEarly break at %d iterations\n' % (i+1))
 				break
 
 	if show_plots:
