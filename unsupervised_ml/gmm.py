@@ -23,7 +23,7 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
 	weighted_pdfs = np.zeros((N, K)) # we'll use these to store the PDF value of sample n and Gaussian k
 	for i in range(max_iter):
 		# step 1: determine assignments / responsibilities
-		# a trivial method:
+		# a naive method:
 		# for k in range(K):
 		# 	for n in range(N):
 		# 		weighted_pdfs[n,k] = pi[k] * mvn.pdf(X[n], M[k], C[k])
@@ -40,7 +40,7 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
 
 
 		# step 2: recalculate model parameters
-		# a trivial method
+		# a naive method
 		# for k in range(K):
 		# 	Nk = R[:,k].sum()
 		# 	pi[k] = Nk / N
@@ -60,7 +60,7 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, show_plots=True):
 		costs[i] = -np.log(weighted_pdfs.sum(axis=1)).sum()
 		if i > 0:
 			if np.abs(costs[i] - costs[i-1]) < 10e-7:
-				print('\nEarily break at %d iterations\n' % (i+1))
+				print('\nBreak early at %d iterations\n' % (i+1))
 				break
 
 	if show_plots:
