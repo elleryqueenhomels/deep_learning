@@ -61,7 +61,7 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, eps=1e-12, show_plots=True):
 		costs[i] = -np.log(weighted_pdfs.sum(axis=1)).sum()
 		if i > 0:
 			if np.abs(costs[i] - costs[i-1]) < 10e-7:
-				print('\nEarly break at %d iterations\n' % (i+1))
+				# print('\nEarly break at %d iterations\n' % (i+1))
 				break
 
 	if show_plots:
@@ -71,12 +71,12 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, eps=1e-12, show_plots=True):
 
 		random_colors = np.random.random((K, 3))
 		colors = R.dot(random_colors)
-		plt.scatter(X[:,0], X[:,1], c=colors)
+		plt.scatter(X[:,0], X[:,1], c=colors, s=100, alpha=0.5)
 		plt.show()
 
-		print('pi:', pi)
-		print('means:', M)
-		print('covariances:', C)
+		# print('pi:', pi)
+		# print('means:', M)
+		# print('covariances:', C)
 
 	return R, pi, M, C
 
