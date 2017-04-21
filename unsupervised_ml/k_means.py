@@ -53,16 +53,18 @@ def plot_k_means(X, K, max_iter=100, beta=1.0, show_plots=True):
 		costs[i] = cost(X, R, M)
 		if i > 0:
 			if np.abs(costs[i] - costs[i-1]) < 10e-7:
+				# print('\nEarly break at %d iterations\n' % (i+1))
 				break
 
 	if show_plots:
 		plt.plot(costs)
-		plt.title('Costs')
+		plt.title('K-Means Costs with %d iterations' % (i+1))
 		plt.show()
 
 		random_colors = np.random.random((K, 3))
 		colors = R.dot(random_colors)
 		plt.scatter(X[:,0], X[:,1], c=colors, s=100, alpha=0.5)
+		plt.title('K-Means Clustering')
 		plt.show()
 
 	return M, R
