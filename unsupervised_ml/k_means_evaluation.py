@@ -1,4 +1,4 @@
-# Methods to evaluate a clustering
+# Methods to evaluate a clustering, e.g. K-Means and GMM
 # external validation method: Purity
 # internal validation method: Davies-Bouldin Index
 
