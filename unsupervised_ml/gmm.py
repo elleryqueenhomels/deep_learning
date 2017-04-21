@@ -66,12 +66,13 @@ def gmm(X, K, max_iter=100, smoothing=10e-3, eps=1e-12, show_plots=True):
 
 	if show_plots:
 		plt.plot(costs)
-		plt.title('Costs with %d iterations' % (i+1))
+		plt.title('GMM Costs with %d iterations' % (i+1))
 		plt.show()
 
 		random_colors = np.random.random((K, 3))
 		colors = R.dot(random_colors)
 		plt.scatter(X[:,0], X[:,1], c=colors, s=100, alpha=0.5)
+		plt.title('GMM Clustering')
 		plt.show()
 
 		# print('pi:', pi)
