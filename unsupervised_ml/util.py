@@ -10,7 +10,7 @@ def get_mnist():
 	Xtrain = data[:-1000, 1:] / np.float32(255)
 	Ytrain = data[:-1000, 0].astype(np.int32)
 	Xtest = data[-1000:, 1:] / np.float32(255)
-	Ytest = data[-1000:, 1:].astype(np.int32)
+	Ytest = data[-1000:, 0].astype(np.int32)
 
 	return Xtrain, Ytrain, Xtest, Ytest
 
