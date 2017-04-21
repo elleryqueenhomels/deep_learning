@@ -24,7 +24,7 @@ def cost(X, R, M):
 	return cost
 
 
-def plot_k_means(X, K, max_iter=20, beta=1.0, show_plots=True):
+def plot_k_means(X, K, max_iter=100, beta=1.0, show_plots=True):
 	N, D = X.shape
 	M = np.zeros((K, D)) # K Means / K Clusters
 	# R = np.zeros((N, K)) # responsibilities matrix
@@ -52,7 +52,7 @@ def plot_k_means(X, K, max_iter=20, beta=1.0, show_plots=True):
 
 		costs[i] = cost(X, R, M)
 		if i > 0:
-			if np.abs(costs[i] - costs[i-1]) < 10e-6:
+			if np.abs(costs[i] - costs[i-1]) < 10e-7:
 				break
 
 	if show_plots:
@@ -62,7 +62,7 @@ def plot_k_means(X, K, max_iter=20, beta=1.0, show_plots=True):
 
 		random_colors = np.random.random((K, 3))
 		colors = R.dot(random_colors)
-		plt.scatter(X[:,0], X[:,1], c=colors)
+		plt.scatter(X[:,0], X[:,1], c=colors, s=100, alpha=0.5)
 		plt.show()
 
 	return M, R
