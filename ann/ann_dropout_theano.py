@@ -38,9 +38,9 @@ class ANN(object):
 		self.dropout_rates = np.array(p_keep, dtype=np.float32)
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-6, decay=0, momentum=0, eps=10e-10, debug=False, cal_train=False, debug_points=100, valid_set=None):
+	def fit(self, X, Y, epochs=10000, batch_sz=0, learning_rate=10e-6, decay=0, momentum=0, eps=10e-10, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		# for GPU accelerated, using float32
-		learning_rate = np.float32(learning_rate)
+		lr = np.float32(learning_rate)
 		decay = np.float32(decay)
 		mu = np.float32(momentum)
 		eps = np.float32(eps)
@@ -123,14 +123,14 @@ class ANN(object):
 				for c, dp, p in zip(cache, dparams, self.params):
 					updates += [
 						(c, decay*c + (one - decay)*T.grad(cost, p)*T.grad(cost, p)),
-						(dp, mu*mu*dp - (one + mu)*learning_rate*T.grad(cost, p)/T.sqrt(c + eps)),
+						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p)/T.sqrt(c + eps)),
 						(p, p + dp)
 					]
 			else:
 				for c, p in zip(cache, self.params):
 					updates += [
 						(c, decay*c + (one - decay)*T.grad(cost, p)*T.grad(cost, p)),
-						(p, p - learning_rate*T.grad(cost, p)/T.sqrt(c + eps))
+						(p, p - lr*T.grad(cost, p)/T.sqrt(c + eps))
 					]
 		else:
 			if mu > 0:
@@ -138,11 +138,11 @@ class ANN(object):
 				dparams = [theano.shared(np.zeros(p.get_value().shape, dtype=np.float32)) for p in self.params]
 				for dp, p in zip(dparams, self.params):
 					updates += [
-						(dp, mu*mu*dp - (one + mu)*learning_rate*T.grad(cost, p)),
+						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p)),
 						(p, p + dp)
 					]
 			else:
-				updates = [(p, p - learning_rate*T.grad(cost, p)) for p in self.params]
+				updates = [(p, p - lr*T.grad(cost, p)) for p in self.params]
 
 		train_op = theano.function(inputs=[thX, thY], updates=updates)
 
@@ -150,9 +150,9 @@ class ANN(object):
 			costs_train, costs_valid = [], []
 			scores_train, scores_valid = [], []
 
-		if batch_size > 0 and batch_size < N:
+		if batch_sz > 0 and batch_sz < N:
 			# training: Backpropagation, using batch gradient descent
-			n_batches = int(N / batch_size)
+			n_batches = int(N / batch_sz)
 			if debug:
 				debug_points = np.sqrt(debug_points)
 				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
@@ -160,8 +160,8 @@ class ANN(object):
 			for i in range(epochs):
 				X, Y = shuffle(X, Y) # if no sklearn, just use: _shuffle(X, Y)
 				for j in range(n_batches):
-					Xbatch = X[j*batch_size:(j*batch_size+batch_size)]
-					Ybatch = Y[j*batch_size:(j*batch_size+batch_size)]
+					Xbatch = X[j*batch_sz:(j*batch_sz+batch_sz)]
+					Ybatch = Y[j*batch_sz:(j*batch_sz+batch_sz)]
 
 					train_op(Xbatch, Ybatch)
 
@@ -283,3 +283,4 @@ def _shuffle(X, Y):
 	idx = np.arange(len(Y))
 	np.random.shuffle(idx)
 	return X[idx], Y[idx]
+
