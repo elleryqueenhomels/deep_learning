@@ -8,7 +8,7 @@ class ANN(object):
 		self.activation_type = activation_type
 
 
-	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-5, decay=0, momentum=0, regularization1=0, regularization2=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
+	def fit(self, X, Y, epochs=10000, batch_sz=0, learning_rate=10e-5, decay=0, momentum=0, reg_l1=0, reg_l2=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		assert(self.layers != None)
 
 		if len(X.shape) == 1:
@@ -45,9 +45,9 @@ class ANN(object):
 			costs_train, costs_valid = [], []
 			scores_train, scores_valid = [], []
 
-		if batch_size > 0 and batch_size < N:
+		if batch_sz > 0 and batch_sz < N:
 			# training: Backpropagation, using batch gradient descent
-			n_batches = int(N / batch_size)
+			n_batches = int(N / batch_sz)
 			if debug:
 				debug_points = np.sqrt(debug_points)
 				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
@@ -56,7 +56,7 @@ class ANN(object):
 				idx = np.arange(N)
 				np.random.shuffle(idx)
 				for j in range(n_batches):
-					batch_idx = idx[j*batch_size:(j*batch_size + batch_size)]
+					batch_idx = idx[j*batch_sz:(j*batch_sz + batch_sz)]
 					Xbatch = X[batch_idx]
 					Ybatch = Y[batch_idx]
 
@@ -64,7 +64,7 @@ class ANN(object):
 					Z = self.forward(Xbatch)
 
 					# gradient descent step
-					self.backpropagation(Ybatch, Z, learning_rate, decay, momentum, regularization1, regularization2)
+					self.backpropagation(Ybatch, Z, learning_rate, decay, momentum, reg_l1, reg_l2)
 
 					# for debug:
 					if debug:
@@ -93,7 +93,7 @@ class ANN(object):
 				Z = self.forward(X)
 
 				# gradient descent step
-				self.backpropagation(Y, Z, learning_rate, decay, momentum, regularization1, regularization2)
+				self.backpropagation(Y, Z, learning_rate, decay, momentum, reg_l1, reg_l2)
 
 				# for debug:
 				if debug:
@@ -173,7 +173,7 @@ class ANN(object):
 		self.db.append(np.zeros(K))
 
 
-	def backpropagation(self, T, Z, learning_rate, decay, momentum, regularization1, regularization2):
+	def backpropagation(self, T, Z, learning_rate, decay, momentum, reg_l1, reg_l2):
 		# len(self.W) == len(Z) - 1 == len(self.layers) + 1; len(self.W) == len(self.b)
 
 		delta = Z[-1] - T # Z[-1] is output Y
@@ -183,12 +183,12 @@ class ANN(object):
 			eps = 1e-10
 			if momentum > 0:
 				for i in reversed(range(len(self.W))):
-					gradW = Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i]
+					gradW = Z[i].T.dot(delta) + reg_l1 * np.sign(self.W[i]) + reg_l2 * self.W[i]
 					self.cache_W[i] = decay*self.cache_W[i] + (1 - decay)*gradW*gradW
 					self.dW[i] = momentum*momentum*self.dW[i] - (1 + momentum)*learning_rate*gradW/(np.sqrt(self.cache_W[i]) + eps)
 					self.W[i] += self.dW[i]
 
-					gradb = delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i]
+					gradb = delta.sum(axis=0) + reg_l1 * np.sign(self.b[i]) + reg_l2 * self.b[i]
 					self.cache_b[i] = decay*self.cache_b[i] + (1 - decay)*gradb*gradb
 					self.db[i] = momentum*momentum*self.db[i] - (1 + momentum)*learning_rate*gradb/(np.sqrt(self.cache_b[i]) + eps)
 					self.b[i] += self.db[i]
@@ -196,11 +196,11 @@ class ANN(object):
 					delta = self.get_delta(delta, self.W[i], Z[i])
 			else:
 				for i in reversed(range(len(self.W))):
-					gradW = Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i]
+					gradW = Z[i].T.dot(delta) + reg_l1 * np.sign(self.W[i]) + reg_l2 * self.W[i]
 					self.cache_W[i] = decay*self.cache_W[i] + (1 - decay)*gradW*gradW
 					self.W[i] -= learning_rate * gradW / (np.sqrt(self.cache_W[i]) + eps)
 
-					gradb = delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i]
+					gradb = delta.sum(axis=0) + reg_l1 * np.sign(self.b[i]) + reg_l2 * self.b[i]
 					self.cache_b[i] = decay*self.cache_b[i] + (1 - decay)*gradb*gradb
 					self.b[i] -= learning_rate * gradb / (np.sqrt(self.cache_b[i]) + eps)
 
@@ -208,19 +208,19 @@ class ANN(object):
 		else:
 			if momentum > 0:
 				for i in reversed(range(len(self.W))):
-					gradW = Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i]
+					gradW = Z[i].T.dot(delta) + reg_l1 * np.sign(self.W[i]) + reg_l2 * self.W[i]
 					self.dW[i] = momentum*momentum*self.dW[i] - (1 + momentum)*learning_rate*gradW
 					self.W[i] += self.dW[i]
 
-					gradb = delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i]
+					gradb = delta.sum(axis=0) + reg_l1 * np.sign(self.b[i]) + reg_l2 * self.b[i]
 					self.db[i] = momentum*momentum*self.db[i] - (1 + momentum)*learning_rate*gradb
 					self.b[i] += self.db[i]
 
 					delta = self.get_delta(delta, self.W[i], Z[i])
 			else:
 				for i in reversed(range(len(self.W))):
-					self.W[i] -= learning_rate * (Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i])
-					self.b[i] -= learning_rate * (delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i])
+					self.W[i] -= learning_rate * (Z[i].T.dot(delta) + reg_l1 * np.sign(self.W[i]) + reg_l2 * self.W[i])
+					self.b[i] -= learning_rate * (delta.sum(axis=0) + reg_l1 * np.sign(self.b[i]) + reg_l2 * self.b[i])
 					delta = self.get_delta(delta, self.W[i], Z[i])
 
 
@@ -287,3 +287,4 @@ class ANN(object):
 		# 	T[i, int(Y[i])] = 1
 		T[np.arange(N), Y.astype(np.int32)] = 1
 		return T
+

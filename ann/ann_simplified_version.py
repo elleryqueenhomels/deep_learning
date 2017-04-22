@@ -9,7 +9,7 @@ class ANN(object):
 		self.layers = layers
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-5, epochs=20000, regularization1=0, regularization2=0):
+	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-5, epochs=20000, reg_l1=0, reg_l2=0):
 		if layers != None:
 			self.layers = layers
 		assert(self.layers != None)
@@ -33,7 +33,7 @@ class ANN(object):
 			Z = self.forward(X)
 			
 			# gradient descent step
-			self.backpropagation(Y, Z, learning_rate, regularization1, regularization2)
+			self.backpropagation(Y, Z, learning_rate, reg_l1, reg_l2)
 			
 			# for debug:
 			if i % 100 == 0:
@@ -55,12 +55,12 @@ class ANN(object):
 		self.W.append(np.random.randn(self.layers[L-1], K) / np.sqrt(self.layers[L-1] + K))
 		self.b.append(np.zeros(K))
 
-	def backpropagation(self, T, Z, learning_rate, regularization1, regularization2):
+	def backpropagation(self, T, Z, learning_rate, reg_l1, reg_l2):
 		# len(self.W) == len(Z) - 1 == len(self.layers) + 1; len(self.W) == len(self.b)
 		delta = Z[-1] - T # Z[-1] is output Y
 		for i in reversed(range(len(self.W))):
-			self.W[i] -= learning_rate * (Z[i].T.dot(delta) + regularization1 * np.sign(self.W[i]) + regularization2 * self.W[i])
-			self.b[i] -= learning_rate * (delta.sum(axis=0) + regularization1 * np.sign(self.b[i]) + regularization2 * self.b[i])
+			self.W[i] -= learning_rate * (Z[i].T.dot(delta) + reg_l1 * np.sign(self.W[i]) + reg_l2 * self.W[i])
+			self.b[i] -= learning_rate * (delta.sum(axis=0) + reg_l1 * np.sign(self.b[i]) + reg_l2 * self.b[i])
 			if self.activation_type == 1:
 				delta = delta.dot(self.W[i].T) * (1 - Z[i] * Z[i])
 			elif self.activation_type == 2:
@@ -110,3 +110,4 @@ class ANN(object):
 		# 	T[i, int(Y[i])] = 1
 		T[np.arange(N), Y.astype(np.int32)] = 1
 		return T
+

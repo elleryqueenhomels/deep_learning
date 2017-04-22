@@ -29,8 +29,8 @@ class ANN(object):
 		self.dropout_rates = np.array(p_keep, dtype=np.float32)
 		self.activation_type = activation_type
 
-	def fit(self, X, Y, epochs=10000, batch_size=0, learning_rate=10e-6, decay=0, momentum=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
-		learning_rate = np.float32(learning_rate)
+	def fit(self, X, Y, epochs=10000, batch_sz=0, learning_rate=10e-6, decay=0, momentum=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
+		lr = np.float32(learning_rate)
 		decay = np.float32(decay)
 		mu = np.float32(momentum)
 
@@ -92,7 +92,7 @@ class ANN(object):
 		prediction = self.th_predict(self.tfX)
 		self.predict_op = prediction
 
-		train_op = tf.train.RMSPropOptimizer(learning_rate, decay=decay, momentum=mu).minimize(cost)
+		train_op = tf.train.RMSPropOptimizer(lr, decay=decay, momentum=mu).minimize(cost)
 
 		if debug:
 			costs_train, costs_valid = [], []
@@ -102,9 +102,9 @@ class ANN(object):
 		self.session = tf.Session()
 		self.session.run(init)
 
-		if batch_size > 0 and batch_size < N:
+		if batch_sz > 0 and batch_sz < N:
 			# training: Backpropagation, using batch gradient descent
-			n_batches = int(N / batch_size)
+			n_batches = int(N / batch_sz)
 			if debug:
 				debug_points = np.sqrt(debug_points)
 				print_epoch, print_batch = max(int(epochs / debug_points), 1), max(int(n_batches / debug_points), 1)
@@ -112,8 +112,8 @@ class ANN(object):
 			for i in range(epochs):
 				X, Y = shuffle(X, Y) # if no sklearn, just use: _shuffle(X, Y)
 				for j in range(n_batches):
-					Xbatch = X[j*batch_size:(j*batch_size+batch_size)]
-					Ybatch = Y[j*batch_size:(j*batch_size+batch_size)]
+					Xbatch = X[j*batch_sz:(j*batch_sz+batch_sz)]
+					Ybatch = Y[j*batch_sz:(j*batch_sz+batch_sz)]
 
 					self.session.run(train_op, feed_dict={self.tfX: Xbatch, self.tfY: Ybatch})
 
@@ -241,3 +241,4 @@ def _shuffle(X, Y):
 	idx = np.arange(len(Y))
 	np.random.shuffle(idx)
 	return X[idx], Y[idx]
+

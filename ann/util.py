@@ -69,3 +69,4 @@ def get_facial_data(balance_ones=False):
     X, Y = shuffle(X, Y)
 
     return X, Y
+
