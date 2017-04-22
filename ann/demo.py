@@ -51,7 +51,7 @@ def experiment2():
 		print('\nBegin to training model.')
 		t0 = datetime.now()
 		# for MNIST: lr=10e-4, for Facial: lr=10e-5, using ReLU as activation both.
-		model.fit(Xtrain, Ytrain, epochs=50, batch_sz=500, learning_rate=10e-5, decay=0.99, momentum=0.9, reg=0.01, debug=True, debug_points=10, valid_set=[Xtest[:1000], Ytest[:1000]])
+		model.fit(Xtrain, Ytrain, epochs=50, batch_sz=500, learning_rate=10e-5, decay=0.99, momentum=0.9, reg_l2=0.01, debug=True, debug_points=10, valid_set=[Xtest[:1000], Ytest[:1000]])
 		print('\nTraining time:', (datetime.now() - t0), 'Train size:', len(Ytrain))
 
 		# with open(MODEL_PATH, 'wb') as f:
