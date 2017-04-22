@@ -20,9 +20,9 @@ def experiment1():
 	# if overflow in fit() function, use learning_rate=10e-6 or less.
 	# The best setting so far:
 	# model = ANN_Regression([100, 100, 100], activation_type=1)
-	# model.fit(Xnorm, Y, epochs=6000, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01)
+	# model.fit(Xnorm, Y, epochs=6000, learning_rate=10e-5, decay=0.99, momentum=0.9, reg_l2=0.01)
 	# for Regression: Neural Network deep is better than fat.
-	model.fit(Xnorm, Y, epochs=6000, batch_size=500, learning_rate=10e-5, decay=0.99, momentum=0.9, regularization2=0.01, debug=True, valid_set=[Xnorm[:200], Y[:200]])
+	model.fit(Xnorm, Y, epochs=6000, batch_sz=500, learning_rate=10e-5, decay=0.99, momentum=0.9, reg_l2=0.01, debug=True, valid_set=[Xnorm[:200], Y[:200]])
 	print('\nFinal score: %.8f%%' % (model.score(Xnorm, Y) * 100), '\n')
 
 	Yhat = model.predict(Xnorm)
@@ -52,3 +52,4 @@ def experiment2():
 
 if __name__ == '__main__':
 	experiment1()
+
