@@ -88,15 +88,18 @@ class ANN(object):
 		if batch_sz <= 0 or batch_sz >= N:
 			batch_sz = int(N / 100)
 
-		tfX = tf.placeholder(tf.float32, shape=(batch_sz, D), name='X')
-		tfY = tf.placeholder(tf.float32, shape=(batch_sz, K), name='Y')
+		tfX = tf.placeholder(tf.float32, shape=(batch_sz, D), name='X') # Used for training, in order to avoid RAM swapping frequently
+		tfY = tf.placeholder(tf.float32, shape=(batch_sz, K), name='Y') # Used for training, in order to avoid RAM swapping frequently
+		self.tfX = tf.placeholder(tf.float32, shape=(None, D), name='X') # Used for 'forward' and 'predict', after trained the model
 
 		pY = self.th_forward(tfX)
+		self.forward_op = self.th_forward(self.tfX)
 
 		reg_cost = reg * sum([tf.nn.l2_loss(p) for p in self.params])
 		cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pY, labels=tfY)) + reg_cost
 
 		prediction = self.th_predict(tfX)
+		self.predict_op = self.th_predict(self.tfX)
 
 		train_op = tf.train.RMSPropOptimizer(lr, decay=decay, momentum=mu).minimize(cost)
 
@@ -105,8 +108,8 @@ class ANN(object):
 			scores_train, scores_valid = [], []
 
 		init = tf.global_variables_initializer()
-		session = tf.Session()
-		session.run(init)
+		self.session = tf.Session()
+		self.session.run(init)
 
 		# training: Backpropagation, using batch gradient descent
 		n_batches = int(N / batch_sz)
@@ -120,7 +123,7 @@ class ANN(object):
 				Xbatch = X[j*batch_sz:(j*batch_sz+batch_sz)]
 				Ybatch = Y[j*batch_sz:(j*batch_sz+batch_sz)]
 
-				session.run(train_op, feed_dict={tfX: Xbatch, tfY: Ybatch})
+				self.session.run(train_op, feed_dict={tfX: Xbatch, tfY: Ybatch})
 
 				# for debug:
 				if debug:
@@ -133,8 +136,8 @@ class ANN(object):
 							for k in range(n_batches):
 								Xtrainbatch = X[k*batch_sz:(k*batch_sz + batch_sz)]
 								Ytrainbatch = Y[k*batch_sz:(k*batch_sz + batch_sz)]
-								ctrain += session.run(cost, feed_dict={tfX: Xtrainbatch, tfY: Ytrainbatch})
-								pYtrain[k*batch_sz:(k*batch_sz + batch_sz)] = session.run(prediction, feed_dict={tfX: Xtrainbatch})
+								ctrain += self.session.run(cost, feed_dict={tfX: Xtrainbatch, tfY: Ytrainbatch})
+								pYtrain[k*batch_sz:(k*batch_sz + batch_sz)] = self.session.run(prediction, feed_dict={tfX: Xtrainbatch})
 							strain = classification_rate(Ytrain[:train_length], pYtrain)
 							costs_train.append(ctrain)
 							scores_train.append(strain)
@@ -146,8 +149,8 @@ class ANN(object):
 							for k in range(int(len(Yvalid) / batch_sz)):
 								Xvalidbatch = Xvalid[k*batch_sz:(k*batch_sz + batch_sz)]
 								Yvalidbatch = Yvalid[k*batch_sz:(k*batch_sz + batch_sz)]
-								cvalid += session.run(cost, feed_dict={tfX: Xvalidbatch, tfY: Yvalidbatch})
-								pYvalid[k*batch_sz:(k*batch_sz + batch_sz)] = session.run(prediction, feed_dict={tfX: Xvalidbatch})
+								cvalid += self.session.run(cost, feed_dict={tfX: Xvalidbatch, tfY: Yvalidbatch})
+								pYvalid[k*batch_sz:(k*batch_sz + batch_sz)] = self.session.run(prediction, feed_dict={tfX: Xvalidbatch})
 							svalid = classification_rate(Yvalid_flat[:valid_length], pYvalid)
 							costs_valid.append(cvalid)
 							scores_valid.append(svalid)
@@ -162,8 +165,8 @@ class ANN(object):
 				for k in range(n_batches):
 					Xtrainbatch = X[k*batch_sz:(k*batch_sz + batch_sz)]
 					Ytrainbatch = Y[k*batch_sz:(k*batch_sz + batch_sz)]
-					ctrain += session.run(cost, feed_dict={tfX: Xtrainbatch, tfY: Ytrainbatch})
-					pYtrain[k*batch_sz:(k*batch_sz + batch_sz)] = session.run(prediction, feed_dict={tfX: Xtrainbatch})
+					ctrain += self.session.run(cost, feed_dict={tfX: Xtrainbatch, tfY: Ytrainbatch})
+					pYtrain[k*batch_sz:(k*batch_sz + batch_sz)] = self.session.run(prediction, feed_dict={tfX: Xtrainbatch})
 				strain = classification_rate(Ytrain[:train_length], pYtrain)
 				costs_train.append(ctrain)
 				scores_train.append(strain)
@@ -175,8 +178,8 @@ class ANN(object):
 				for k in range(int(len(Yvalid) / batch_sz)):
 					Xvalidbatch = Xvalid[k*batch_sz:(k*batch_sz + batch_sz)]
 					Yvalidbatch = Yvalid[k*batch_sz:(k*batch_sz + batch_sz)]
-					cvalid += session.run(cost, feed_dict={tfX: Xvalidbatch, tfY: Yvalidbatch})
-					pYvalid[k*batch_sz:(k*batch_sz + batch_sz)] = session.run(prediction, feed_dict={tfX: Xvalidbatch})
+					cvalid += self.session.run(cost, feed_dict={tfX: Xvalidbatch, tfY: Yvalidbatch})
+					pYvalid[k*batch_sz:(k*batch_sz + batch_sz)] = self.session.run(prediction, feed_dict={tfX: Xvalidbatch})
 				svalid = classification_rate(Yvalid_flat[:valid_length], pYvalid)
 				costs_valid.append(cvalid)
 				scores_valid.append(svalid)
@@ -211,19 +214,11 @@ class ANN(object):
 
 	def forward(self, X):
 		X = X.astype(np.float32)
-		tfX = tf.placeholder(tf.float32, shape=X.shape, name='X')
-		forward_op = self.th_forward(tfX)
-		session = tf.Session()
-		session.run(tf.global_variables_initializer())
-		return session.run(forward_op, feed_dict={tfX: X})
+		return self.session.run(self.forward_op, feed_dict={self.tfX: X})
 
 	def predict(self, X):
 		X = X.astype(np.float32)
-		tfX = tf.placeholder(tf.float32, shape=X.shape, name='X')
-		predict_op = self.th_predict(tfX)
-		session = tf.Session()
-		session.run(tf.global_variables_initializer())
-		return session.run(predict_op, feed_dict={tfX: X})
+		return self.session.run(self.predict_op, feed_dict={self.tfX: X})
 
 	def score(self, X, Y):
 		pY = self.predict(X)
