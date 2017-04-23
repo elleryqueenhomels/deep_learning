@@ -116,8 +116,8 @@ class ANN(object):
 				for c, dp, p in zip(cache, dparams, self.params):
 					updates += [
 						(c, decay*c + (one - decay)*T.grad(cost, p)*T.grad(cost, p)),
-						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p)/T.sqrt(c + eps)),
-						(p, p + dp)
+						(p, p + mu*mu*dp - (one + mu)*lr*T.grad(cost, p)/T.sqrt(c + eps)),
+						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p)/T.sqrt(c + eps))
 					]
 			else:
 				for c, p in zip(cache, self.params):
@@ -131,8 +131,8 @@ class ANN(object):
 				dparams = [theano.shared(np.zeros(p.get_value().shape, dtype=np.float32)) for p in self.params]
 				for dp, p in zip(dparams, self.params):
 					updates += [
-						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p)),
-						(p, p + dp)
+						(p, p + mu*mu*dp - (one + mu)*lr*T.grad(cost, p)),
+						(dp, mu*mu*dp - (one + mu)*lr*T.grad(cost, p))
 					]
 			else:
 				updates = [(p, p - lr*T.grad(cost, p)) for p in self.params]
