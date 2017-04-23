@@ -1,4 +1,6 @@
 # Deep Neural Network with AutoEncoder Pretraining
+# In general:
+# Greedy Layer-wise AutoEncoder Pretraining is better than Pure Backpropagation
 
 import numpy as np
 import theano
