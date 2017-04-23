@@ -57,7 +57,7 @@ class ANN(object):
 
 		# for debug: pre-process validation set
 		if debug:
-			if valid_set != None:
+			if valid_set is not None:
 				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
 					valid_set = None
 				else:
@@ -71,7 +71,7 @@ class ANN(object):
 							Yvalid = np.argmax(Yvalid, axis=1)
 						Xvalid = Xvalid.astype(np.float32)
 						Yvalid = Yvalid.astype(np.int32)
-			debug = cal_train or (valid_set != None)
+			debug = cal_train or (valid_set is not None)
 
 		# initialize hidden layers
 		N, D = X.shape
@@ -167,7 +167,7 @@ class ANN(object):
 								costs_train.append(ctrain)
 								scores_train.append(strain)
 								print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
-							if valid_set != None:
+							if valid_set is not None:
 								cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 								svalid = classification_rate(Yvalid, pYvalid)
 								costs_valid.append(cvalid)
@@ -190,7 +190,7 @@ class ANN(object):
 							costs_train.append(ctrain)
 							scores_train.append(strain)
 							print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
-						if valid_set != None:
+						if valid_set is not None:
 							cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 							svalid = classification_rate(Yvalid, pYvalid)
 							costs_valid.append(cvalid)
@@ -204,7 +204,7 @@ class ANN(object):
 				costs_train.append(ctrain)
 				scores_train.append(strain)
 				print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Y)))
-			if valid_set != None:
+			if valid_set is not None:
 				cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 				svalid = classification_rate(Yvalid, pYvalid)
 				costs_valid.append(cvalid)
@@ -214,14 +214,14 @@ class ANN(object):
 			import matplotlib.pyplot as plt
 			if cal_train:
 				plt.plot(costs_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
 			if cal_train:
 				plt.plot(scores_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(scores_valid, label='validation set')
 			plt.title('Classification Rate')
 			plt.legend()
