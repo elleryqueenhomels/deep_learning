@@ -2,6 +2,52 @@ import numpy as np
 import pandas as pd
 from sklearn.utils import shuffle
 
+def get_clouds():
+    Nclass = 500
+    D = 2
+
+    X1 = np.random.randn(Nclass, D) + np.array([0, -2])
+    X2 = np.random.randn(Nclass, D) + np.array([2, 2])
+    X3 = np.random.randn(Nclass, D) + np.array([-2, 2])
+    X = np.vstack([X1, X2, X3])
+    Y = np.array([0]*Nclass + [1]*Nclass +[2]*Nclass)
+    return X, Y
+
+def get_spiral():
+    # Idea: radius -> low...high
+    #               (do not start at 0, otherwise points will be "mused" at origin)
+    #       angle = low...high proportional to radius
+    #               [0, 2pi/6, 4pi/6, ... , 10pi/6] --> [pi/2, pi/3 + pi/2, ... , 5pi/3 + pi/2]
+    # x = r*cos(theta), y = r*sin(theta)
+
+    radius = np.linspace(1, 10, 100)
+    thetas = np.empty((6, 100))
+    for i in range(6):
+        start_angle = np.pi * i / 3.0 # 2pi/6 == pi/3
+        end_angle = start_angle + np.pi / 2.0
+        angles = np.linspace(start_angle, end_angle, 100)
+        thetas[i] = angles
+
+    # convert into cartesian coordinates
+    X1 = np.empty((6, 100))
+    X2 = np.empty((6, 100))
+    for i in range(6):
+        X1[i] = radius * np.cos(thetas[i])
+        X2[i] = radius * np.sin(thetas[i])
+
+    # inputs
+    X = np.empty((600, 2))
+    X[:,0] = X1.flatten()
+    X[:,1] = X2.flatten()
+
+    # add noise
+    X += np.random.randn(*X.shape) * 0.5
+
+    # targets
+    Y = np.array([0]*100 + [1]*100 + [0]*100 + [1]*100 + [0]*100 + [1]*100)
+
+    return X, Y
+
 def get_data(limit=None):
     print("Reading in and transforming data...")
     df = pd.read_csv('../../python_test/data_set/MNIST_train.csv')
