@@ -22,7 +22,7 @@ class AutoEncoder(object):
 		elif activation_type == 3:
 			self.activation = T.nnet.relu
 		else:
-			self.activation = T.nnet.elu
+			self.activation = elu
 
 	def fit(self, X, epochs=1, batch_sz=100, learning_rate=0.5, momentum=0.99, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
@@ -56,11 +56,11 @@ class AutoEncoder(object):
 		self.forward_hidden_op = theano.function(inputs=[X_in], outputs=H)
 
 		if self.cost_type == 1:
-			cost = -T.mean(X_in * T.log(X_hat) + (one - X_in) * T.log(one - X_hat))
+			cost = -T.mean(X_in * T.log(X_hat) + (one - X_in) * T.log(one - X_hat)) # binary cross-entropy
 		elif self.cost_type == 2:
-			cost = T.mean((X_in - X_hat) * (X_in - X_hat))
+			cost = T.mean((X_in - X_hat) * (X_in - X_hat)) # squared error
 		else:
-			cost = -T.mean(X_in * T.log(X_hat))
+			cost = -T.mean(X_in * T.log(X_hat)) # categorical cross-entropy
 		cost_op = theano.function(inputs=[X_in], outputs=cost)
 
 		updates = []
@@ -231,6 +231,10 @@ class DNN(object):
 	def score(self, X, Y):
 		P = self.predict(X)
 		return np.mean(P == Y)
+
+
+def elu(X):
+	return T.switch(X >= np.float32(0), X, (T.exp(X) - np.float32(1)))
 
 
 def init_weights(shape):
