@@ -19,8 +19,10 @@ class AutoEncoder(object):
 			self.activation = T.nnet.sigmoid
 		elif activation_type == 2:
 			self.activation = T.tanh
-		else:
+		elif activation_type == 3:
 			self.activation = T.nnet.relu
+		else:
+			self.activation = T.nnet.elu
 
 	def fit(self, X, epochs=1, batch_sz=100, learning_rate=0.5, momentum=0.99, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
@@ -55,8 +57,10 @@ class AutoEncoder(object):
 
 		if self.cost_type == 1:
 			cost = -T.mean(X_in * T.log(X_hat) + (one - X_in) * T.log(one - X_hat))
-		else:
+		elif self.cost_type == 2:
 			cost = T.mean((X_in - X_hat) * (X_in - X_hat))
+		else:
+			cost = -T.mean(X_in * T.log(X_hat))
 		cost_op = theano.function(inputs=[X_in], outputs=cost)
 
 		updates = []
