@@ -3,7 +3,6 @@ import pandas as pd
 
 DATA_PATH = '../../python_test/data_set/MNIST_train.csv'
 
-
 def error_rate(T, P):
 	return np.mean(T != P)
 
