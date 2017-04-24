@@ -9,7 +9,7 @@ class ANN(object):
 
 
 	def fit(self, X, Y, epochs=10000, batch_sz=0, learning_rate=10e-5, decay=0, momentum=0, reg_l1=0, reg_l2=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
-		assert(self.layers != None)
+		assert(self.layers is not None)
 
 		if len(X.shape) == 1:
 			X = X.reshape(-1, 1)
@@ -22,7 +22,7 @@ class ANN(object):
 		if debug:
 			if cal_train:
 				Ytrain = np.argmax(Y, axis=1)
-			if valid_set != None:
+			if valid_set is not None:
 				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]):
 					valid_set = None
 				else:
@@ -34,7 +34,7 @@ class ANN(object):
 						Xvalid, Yvalid = valid_set[0], np.squeeze(valid_set[1])
 						if len(Yvalid.shape) == 2:
 							Yvalid = np.argmax(Yvalid, axis=1)
-			debug = cal_train or (valid_set != None)
+			debug = cal_train or (valid_set is not None)
 
 		N, D = X.shape
 		K = Y.shape[1]
@@ -76,7 +76,7 @@ class ANN(object):
 								costs_train.append(ctrain)
 								scores_train.append(strain)
 								print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
-							if valid_set != None:
+							if valid_set is not None:
 								pYvalid = self.forward(Xvalid)[-1]
 								cvalid = self.cost(Yvalid, pYvalid)
 								svalid = self.classification_rate(Yvalid, np.argmax(pYvalid, axis=1))
@@ -105,7 +105,7 @@ class ANN(object):
 							costs_train.append(ctrain)
 							scores_train.append(strain)
 							print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
-						if valid_set != None:
+						if valid_set is not None:
 							pYvalid = self.forward(Xvalid)[-1]
 							cvalid = self.cost(Yvalid, pYvalid)
 							svalid = self.classification_rate(Yvalid, np.argmax(pYvalid, axis=1))
@@ -121,7 +121,7 @@ class ANN(object):
 				costs_train.append(ctrain)
 				scores_train.append(strain)
 				print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Ytrain)))
-			if valid_set != None:
+			if valid_set is not None:
 				pYvalid = self.forward(Xvalid)[-1]
 				cvalid = self.cost(Yvalid, pYvalid)
 				svalid = self.classification_rate(Yvalid, np.argmax(pYvalid, axis=1))
@@ -132,14 +132,14 @@ class ANN(object):
 			import matplotlib.pyplot as plt
 			if cal_train:
 				plt.plot(costs_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
 			if cal_train:
 				plt.plot(scores_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(scores_valid, label='validation set')
 			plt.title('Classification Rate')
 			plt.legend()

@@ -60,7 +60,7 @@ class CNN(object):
 	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None):
 		self.conv_layer_sizes = conv_layer_sizes
 		self.hidden_layer_sizes = hidden_layer_sizes
-		if pool_layer_sizes == None:
+		if pool_layer_sizes is None:
 			pool_layer_sizes = [(2, 2) for i in range(len(conv_layer_sizes))]
 		self.pool_layer_sizes = pool_layer_sizes
 		assert(len(conv_layer_sizes) == len(pool_layer_sizes))
@@ -86,7 +86,7 @@ class CNN(object):
 
 		# for debug: pre-process validation set
 		if debug:
-			if valid_set != None:
+			if valid_set is not None:
 				if len(valid_set) < 2 or len(valid_set[0]) != len(valid_set[1]) or len(valid_set[0].shape) != 4:
 					valid_set = None
 				else:
@@ -99,7 +99,7 @@ class CNN(object):
 							Yvalid = np.argmax(Yvalid, axis=1)
 						Xvalid = Xvalid.astype(np.float32)
 						Yvalid = Yvalid.astype(np.int32)
-			debug = cal_train or (valid_set != None)
+			debug = cal_train or (valid_set is not None)
 
 		# initialize convpool layers
 		N, c, width, height = X.shape
@@ -213,7 +213,7 @@ class CNN(object):
 								costs_train.append(ctrain)
 								scores_train.append(strain)
 								print('epoch=%d, batch=%d, n_batches=%d: cost_train=%s, score_train=%.6f%%' % (i, j, n_batches, ctrain, strain*100))
-							if valid_set != None:
+							if valid_set is not None:
 								cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 								svalid = classification_rate(Yvalid, pYvalid)
 								costs_valid.append(cvalid)
@@ -236,7 +236,7 @@ class CNN(object):
 							costs_train.append(ctrain)
 							scores_train.append(strain)
 							print('epoch=%d: cost_train=%s, score_train=%.6f%%' % (i, ctrain, strain*100))
-						if valid_set != None:
+						if valid_set is not None:
 							cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 							svalid = classification_rate(Yvalid, pYvalid)
 							costs_valid.append(cvalid)
@@ -250,7 +250,7 @@ class CNN(object):
 				costs_train.append(ctrain)
 				scores_train.append(strain)
 				print('Final validation: cost_train=%s, score_train=%.6f%%, train_size=%d' % (ctrain, strain*100, len(Y)))
-			if valid_set != None:
+			if valid_set is not None:
 				cvalid, pYvalid = cost_predict_op(Xvalid, Yvalid)
 				svalid = classification_rate(Yvalid, pYvalid)
 				costs_valid.append(cvalid)
@@ -260,14 +260,14 @@ class CNN(object):
 			import matplotlib.pyplot as plt
 			if cal_train:
 				plt.plot(costs_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(costs_valid, label='validation set')
 			plt.title('Cross-Entropy Cost')
 			plt.legend()
 			plt.show()
 			if cal_train:
 				plt.plot(scores_train, label='training set')
-			if valid_set != None:
+			if valid_set is not None:
 				plt.plot(scores_valid, label='validation set')
 			plt.title('Classification Rate')
 			plt.legend()

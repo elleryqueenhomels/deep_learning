@@ -10,10 +10,10 @@ class ANN(object):
 		self.activation_type = activation_type
 
 	def fit(self, X, Y, layers=None, activation_type=None, learning_rate=10e-5, epochs=20000, reg_l1=0, reg_l2=0):
-		if layers != None:
+		if layers is not None:
 			self.layers = layers
-		assert(self.layers != None)
-		if activation_type != None:
+		assert(self.layers is not None)
+		if activation_type is not None:
 			self.activation_type = activation_type
 		
 		if len(X.shape) == 1:
