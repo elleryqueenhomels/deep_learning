@@ -3,9 +3,16 @@ import pandas as pd
 
 DATA_PATH = '../../python_test/data_set/MNIST_train.csv'
 
+
+def error_rate(T, P):
+	return np.mean(T != P)
+
 def classification_rate(T, P):
 	return np.mean(T == P)
 
+def init_weights(shape):
+	W = np.random.randn(*shape) / np.sqrt(sum(shape))
+	return W.astype(np.float32)
 
 def get_mnist(Ntrain=-1000):
 	# MNIST data:
