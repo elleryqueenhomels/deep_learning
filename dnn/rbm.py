@@ -20,7 +20,7 @@ class RBM(object):
 		self.activation = get_activation(activation_type)
 		self.cost_type = cost_type
 
-	def fit(self, X, epochs=1, batch_sz=100, learning_rate=0.5, momentum=0.99, debug=False, print_period=20, show_fig=False):
+	def fit(self, X, epochs=1, batch_sz=100, learning_rate=0.5, momentum=0, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
 		lr = np.float32(learning_rate)
 		mu = np.float32(momentum)
@@ -68,7 +68,7 @@ class RBM(object):
 		X_sample = self.sample_v_given_h(H)
 
 		# define the objective function, updates, and train operation
-		objective = T.mean(self.free_energy(X_in)) - T.mean(free_energy(self.free_energy(X_sample)))
+		objective = T.mean(self.free_energy(X_in)) - T.mean(self.free_energy(X_sample))
 
 		# need to consider X_sample as constant because Theano can't take the derivative of random numbers.
 		if mu > 0:
