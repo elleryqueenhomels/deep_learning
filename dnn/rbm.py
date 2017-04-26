@@ -68,7 +68,7 @@ class RBM(object):
 		X_sample = self.sample_v_given_h(H)
 
 		# define the objective function, updates, and train operation
-		objective = T.mean(self.free_energy(X_in)) - T.mean(self.free_energy(X_sample))
+		objective = T.mean(self.free_energy(X_in)) - T.mean(self.free_energy(X_sample)) # free_energy(V0) - free_energy(V1)
 
 		# need to consider X_sample as constant because Theano can't take the derivative of random numbers.
 		if mu > 0:
@@ -118,12 +118,12 @@ class RBM(object):
 		return -V.dot(self.b) - T.sum(T.log(one + T.exp(self.c + V.dot(self.W))), axis=1)
 
 	def sample_h_given_v(self, V):
-		p_h_given_v = self.activation(V.dot(self.W) + self.c)
+		p_h_given_v = self.activation(V.dot(self.W) + self.c) # forward pass
 		h_sample = self.rng.binomial(n=1, p=p_h_given_v, size=p_h_given_v.shape, dtype='float32')
 		return h_sample
 
 	def sample_v_given_h(self, H):
-		p_v_given_h = self.activation(H.dot(self.W.T) + self.b)
+		p_v_given_h = self.activation(H.dot(self.W.T) + self.b) # backward pass
 		v_sample = self.rng.binomial(n=1, p=p_v_given_h, size=p_v_given_h.shape, dtype='float32')
 		return v_sample
 
