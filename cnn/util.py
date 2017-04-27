@@ -52,3 +52,4 @@ def rearrange(X):
 		for j in range(C):
 			out[i, j, :, :] = X[:, :, j, i]
 	return out / np.float32(255)
+
