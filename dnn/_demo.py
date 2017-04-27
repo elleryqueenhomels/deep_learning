@@ -10,8 +10,7 @@ from util import get_mnist
 def test_autoencoder(Xtrain, Ytrain, Xtest, Ytest):
 	dnn = DNN([1000, 750, 500], UnsupervisedModel=AutoEncoder, activation_type=1, cost_type=1)
 
-	# args: (Xtest, Ytest, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False)
-	dnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, debug=True, show_fig=False)
+	dnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, pretrain_lr=0.5, pretrain_mu=0.99, debug=True, show_fig=False)
 
 	print('\nFinal Score:')
 	print('Train accuracy=%.6f%%, Train size: %s' % (dnn.score(Xtrain, Ytrain)*100, len(Ytrain)))
@@ -21,8 +20,7 @@ def test_autoencoder(Xtrain, Ytrain, Xtest, Ytest):
 def test_rbm(Xtrain, Ytrain, Xtest, Ytest):
 	dnn = DNN([1000, 750, 500], UnsupervisedModel=RBM, activation_type=1, cost_type=1)
 
-	# args: (Xtest, Ytest, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False)
-	dnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, debug=True, show_fig=False)
+	dnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, debug=True, show_fig=False)
 
 	print('\nFinal Score:')
 	print('Train accuracy=%.6f%%, Train size: %s' % (dnn.score(Xtrain, Ytrain)*100, len(Ytrain)))
@@ -47,7 +45,7 @@ def test_cnn(Xtrain, Ytrain, Xtest, Ytest):
 
 	cnn = CNN([(20, 5, 5), (50, 5, 5)], hidden_layer_sizes=[1000, 750, 500], UnsupervisedModel=RBM, activation_type=1, cost_type=1)
 
-	cnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, debug=True, show_fig=False)
+	cnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, debug=True, show_fig=False)
 
 	print('\nFinal Score:')
 	print('Train accuracy=%.6f%%, Train size: %s' % (cnn.score(Xtrain, Ytrain)*100, len(Ytrain)))
@@ -58,7 +56,7 @@ def main():
 	Xtrain, Ytrain, Xtest, Ytest = get_mnist(21000)
 	test_autoencoder(Xtrain, Ytrain, Xtest, Ytest)
 	test_rbm(Xtrain, Ytrain, Xtest, Ytest)
-	test_no_pretrain(Xtrain, Ytrain, Xtest, Ytest)
+	# test_no_pretrain(Xtrain, Ytrain, Xtest, Ytest)
 	test_cnn(Xtrain, Ytrain, Xtest, Ytest)
 
 
