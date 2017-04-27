@@ -59,7 +59,10 @@ class RBM(object):
 		# as we do Contrstive Divergence
 		if debug:
 			X_hat = self.forward_output(X_in)
-			cost = -T.mean(X_in * T.log(X_hat) + (one - X_in) * T.log(one - X_hat)) # binary cross-entropy
+			if self.cost_type == 1:
+				cost = -T.mean(X_in * T.log(X_hat) + (one - X_in) * T.log(one - X_hat)) # binary cross-entropy
+			else:
+				cost = T.mean((X_in - X_hat) * (X_in - X_hat)) # squared error
 			cost_op = theano.function(inputs=[X_in], outputs=cost)
 
 		# Now begin to do Contrastive Divergence (CD-1)
