@@ -17,13 +17,11 @@ from rbm import RBM
 class DNN(object):
 	def __init__(self, hidden_layer_sizes, UnsupervisedModel=AutoEncoder, activation_type=1, cost_type=1):
 		self.hidden_layers = []
-		count = 0
-		for M in hidden_layer_sizes:
+		for i, M in enumerate(hidden_layer_sizes):
 			h = UnsupervisedModel(M, count, activation_type, cost_type)
 			self.hidden_layers.append(h)
-			count += 1
 
-	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
+	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
 		lr = np.float32(learning_rate)
 		mu = np.float32(momentum)
@@ -44,7 +42,7 @@ class DNN(object):
 
 		current_input = X
 		for h in self.hidden_layers:
-			h.fit(current_input, epochs=pretrain_epochs, batch_sz=pretrain_batch_sz, debug=debug, print_period=print_period, show_fig=show_fig)
+			h.fit(current_input, epochs=pretrain_epochs, batch_sz=pretrain_batch_sz, learning_rate=pretrain_lr, momentum=pretrain_mu, debug=debug, print_period=print_period, show_fig=show_fig)
 			current_input = h.forward_hidden_op(current_input) # create current_input for next layer
 
 		# initialize logistic regression layer
