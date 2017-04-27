@@ -1,4 +1,5 @@
 import numpy as np
+import theano.tensor as T
 
 
 def init_filter(shape, poolsz):
@@ -11,6 +12,21 @@ def init_weight_and_bias(M1, M2):
 	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
 	b = np.zeros(M2)
 	return W.astype(np.float32), b.astype(np.float32)
+
+
+def get_activation(activation_type):
+	if activation_type == 1:
+		return T.nnet.sigmoid
+	elif activation_type == 2:
+		return T.tanh
+	elif activation_type == 3:
+		return T.nnet.relu
+	else:
+		return elu
+
+
+def elu(X):
+	return T.switch(X >= np.float32(0), X, (T.exp(X) - np.float32(1)))
 
 
 def classification_rate(T, P):
