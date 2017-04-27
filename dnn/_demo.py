@@ -50,8 +50,8 @@ def test_cnn(Xtrain, Ytrain, Xtest, Ytest):
 	cnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, debug=True, show_fig=False)
 
 	print('\nFinal Score:')
-	print('Train accuracy=%.6f%%, Train size: %s' % (dnn.score(Xtrain, Ytrain)*100, len(Ytrain)))
-	print('Test accuracy=%.6f%%, Test size: %s' % (dnn.score(Xtest, Ytest)*100, len(Ytest)))
+	print('Train accuracy=%.6f%%, Train size: %s' % (cnn.score(Xtrain, Ytrain)*100, len(Ytrain)))
+	print('Test accuracy=%.6f%%, Test size: %s' % (cnn.score(Xtest, Ytest)*100, len(Ytest)))
 
 
 def main():
