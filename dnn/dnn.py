@@ -97,11 +97,12 @@ class DNN(object):
 
 				train_op(Xbatch, Ybatch)
 
-				if debug and j % print_period == 0:
-					the_cost, the_prediction = cost_predict_op(Xtest, Ytest)
-					score = classification_rate(Ytest, the_prediction)
-					costs.append(the_cost)
-					print('epoch=%d, batch=%d, n_batches=%d: cost=%.6f, score=%.6f%%' % (i, j, n_batches, the_cost, score*100))
+				if debug:
+					if j % print_period == 0:
+						the_cost, the_prediction = cost_predict_op(Xtest, Ytest)
+						score = classification_rate(Ytest, the_prediction)
+						costs.append(the_cost)
+						print('epoch=%d, batch=%d, n_batches=%d: cost=%.6f, score=%.6f%%' % (i, j, n_batches, the_cost, score*100))
 
 		if debug:
 			the_cost, the_prediction = cost_predict_op(Xtest, Ytest)
