@@ -5,6 +5,18 @@ import pandas as pd
 import theano.tensor as T
 
 
+def init_filter(shape, poolsz):
+	W = np.random.randn(*shape) / np.sqrt(np.prod(shape[1:]) + shape[0]*np.prod(shape[2:] / np.prod(poolsz)))
+	return W.astype(np.float32)
+
+
+def init_weight_and_bias(M1, M2):
+	M1, M2 = int(M1), int(M2)
+	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
+	b = np.zeros(M2)
+	return W.astype(np.float32), b.astype(np.float32)
+
+
 def init_weights(shape):
 	W = np.random.randn(*shape) / np.sqrt(sum(shape))
 	return W.astype(np.float32)
@@ -31,6 +43,20 @@ def preprocess(X, Y, debug):
 			return None, None, False
 	if len(X.shape) == 1:
 		X = X.reshape(-1, 1)
+	if len(Y.shape) == 2:
+		if Y.shape[1] == 1:
+			Y = np.squeeze(Y)
+		else:
+			Y = np.argmax(Y, axis=1)
+	X = X.astype(np.float32)
+	Y = Y.astype(np.int32)
+	return X, Y, debug
+
+
+def preprocess_cnn(X, Y, debug):
+	if debug:
+		if X is None or Y is None or len(X) != len(Y):
+			return None, None, False
 	if len(Y.shape) == 2:
 		if Y.shape[1] == 1:
 			Y = np.squeeze(Y)
