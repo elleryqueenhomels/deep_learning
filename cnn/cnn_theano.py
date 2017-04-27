@@ -7,11 +7,12 @@ import theano.tensor as T
 from theano.tensor.nnet import conv2d
 from theano.tensor.signal.pool import pool_2d
 from sklearn.utils import shuffle
-# from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
+# from util import shuffle  # If no sklearn installed, using this shuffle() instead.
+from util import init_filter, init_weight_and_bias, get_activation, classification_rate
 
 
 class ConvPoolLayer(object):
-	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2)):
+	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2), activation_type=1):
 		# mi = number of input feature maps
 		# mo = number of output feature maps
 		# fw = filter width
@@ -23,6 +24,7 @@ class ConvPoolLayer(object):
 		self.b = theano.shared(b)
 		self.poolsz = poolsz
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
 		# X.shape = (N, c, xw, xh)
@@ -42,28 +44,31 @@ class ConvPoolLayer(object):
 		# outh = int(yh / poolsz[1])
 		# b.shape = (mo,)
 		# after dimshuffle(), new_b.shape = (1, mo, 1, 1)
-		return T.tanh(pool_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+		return self.activation(pool_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 
 class HiddenLayer(object):
-	def __init__(self, M1, M2):
+	def __init__(self, M1, M2, activation_type=1):
 		W, b = init_weight_and_bias(M1, M2)
 		self.W = theano.shared(W)
 		self.b = theano.shared(b)
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
-		return T.nnet.relu(X.dot(self.W) + self.b)
+		return self.activation(X.dot(self.W) + self.b)
 
 
 class CNN(object):
-	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None):
+	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None, convpool_activation=1, hidden_activation=1):
 		self.conv_layer_sizes = conv_layer_sizes
 		self.hidden_layer_sizes = hidden_layer_sizes
 		if pool_layer_sizes is None:
 			pool_layer_sizes = [(2, 2) for i in range(len(conv_layer_sizes))]
 		self.pool_layer_sizes = pool_layer_sizes
 		assert(len(conv_layer_sizes) == len(pool_layer_sizes))
+		self.convpool_activation = convpool_activation
+		self.hidden_activation = hidden_activation
 
 	def fit(self, X, Y, epochs=1000, batch_sz=0, learning_rate=10e-6, decay=0, momentum=0, reg_l2=0, eps=10e-10, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		# use float32 for Theano GPU mode
@@ -109,7 +114,7 @@ class CNN(object):
 		self.convpool_layers = []
 		for convsz, poolsz in zip(self.conv_layer_sizes, self.pool_layer_sizes):
 			mo, fw, fh = convsz
-			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz)
+			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz, activation_type=self.convpool_activation)
 			self.convpool_layers.append(cp)
 			outw = int((outw - fw + 1) / poolsz[0])
 			outh = int((outh - fh + 1) / poolsz[1])
@@ -120,7 +125,7 @@ class CNN(object):
 		self.hidden_layers = []
 		M1 = mi * outw * outh # Here, mi == self.conv_layer_sizes[-1][0]
 		for M2 in self.hidden_layer_sizes:
-			h = HiddenLayer(M1, M2)
+			h = HiddenLayer(M1, M2, activation_type=self.hidden_activation)
 			self.hidden_layers.append(h)
 			M1 = M2
 
@@ -297,20 +302,4 @@ class CNN(object):
 	def score(self, X, Y):
 		P = self.predict(X)
 		return classification_rate(Y, P)
-
-
-def init_filter(shape, poolsz):
-	W = np.random.randn(*shape) / np.sqrt(np.prod(shape[1:]) + shape[0]*np.prod(shape[2:] / np.prod(poolsz)))
-	return W.astype(np.float32)
-
-
-def init_weight_and_bias(M1, M2):
-	M1, M2 = int(M1), int(M2)
-	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
-	b = np.zeros(M2)
-	return W.astype(np.float32), b.astype(np.float32)
-
-
-def classification_rate(T, P):
-	return np.mean(T == P)
 

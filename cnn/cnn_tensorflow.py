@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from sklearn.utils import shuffle
-# from utils import shuffle  # If no sklearn installed, using this shuffle() instead.
+# from util import shuffle  # If no sklearn installed, using this shuffle() instead.
 
 
 class ConvPoolLayer(object):
