@@ -1,6 +1,7 @@
 import numpy as np
 
 from dnn import DNN
+from cnn import DNN
 from rbm import RBM
 from autoencoder import AutoEncoder
 from util import get_mnist
