@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 from theano.tensor.nnet import conv2d
 from theano.tensor.signal.pool import pool_2d
 from sklearn.utils import shuffle
-from util import init_filter, init_weight_and_bias, preprocess_cnn, classification_rate
+from util import init_filter, init_weight_and_bias, get_activation, preprocess_cnn, classification_rate
 from autoencoder import AutoEncoder
 from rbm import RBM
 
 
 class ConvPoolLayer(object):
-	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2)):
+	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2), activation_type=1):
 		# mi = number of input feature maps
 		# mo = number of output feature maps
 		# fw = filter width
@@ -26,6 +26,7 @@ class ConvPoolLayer(object):
 		self.b = theano.shared(b)
 		self.poolsz = poolsz
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
 		# X.shape = (N, c, xw, xh)
@@ -45,7 +46,7 @@ class ConvPoolLayer(object):
 		# outh = int(yh / poolsz[1])
 		# b.shape = (mo,)
 		# after dimshuffle(), new_b.shape = (1, mo, 1, 1)
-		return T.nnet.sigmoid(pool_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+		return self.activation(pool_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 
 class CNN(object):
@@ -59,8 +60,9 @@ class CNN(object):
 		for i, M in enumerate(hidden_layer_sizes):
 			h = UnsupervisedModel(M, i, activation_type, cost_type)
 			self.hidden_layers.append(h)
+		self.activation_type = activation_type
 
-	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
+	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
 		lr = np.float32(learning_rate)
 		mu = np.float32(momentum)
@@ -83,7 +85,7 @@ class CNN(object):
 		self.convpool_layers = []
 		for convsz, poolsz in zip(self.conv_layer_sizes, self.pool_layer_sizes):
 			mo, fw, fh = convsz
-			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz)
+			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz, activation_type=self.activation_type)
 			self.convpool_layers.append(cp)
 			outw = int((outw - fw + 1) / poolsz[0])
 			outh = int((outh - fh + 1) / poolsz[1])
@@ -103,7 +105,7 @@ class CNN(object):
 
 		current_input = convpool_op(X)
 		for h in self.hidden_layers:
-			h.fit(current_input, epochs=pretrain_epochs, batch_sz=pretrain_batch_sz, debug=debug, print_period=print_period, show_fig=show_fig)
+			h.fit(current_input, epochs=pretrain_epochs, batch_sz=pretrain_batch_sz, learning_rate=pretrain_lr, momentum=pretrain_mu, debug=debug, print_period=print_period, show_fig=show_fig)
 			current_input = h.forward_hidden_op(current_input) # create current_input for next layer
 
 		# initialize logistic regression layer
