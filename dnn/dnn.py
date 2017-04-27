@@ -18,7 +18,7 @@ class DNN(object):
 	def __init__(self, hidden_layer_sizes, UnsupervisedModel=AutoEncoder, activation_type=1, cost_type=1):
 		self.hidden_layers = []
 		for i, M in enumerate(hidden_layer_sizes):
-			h = UnsupervisedModel(M, count, activation_type, cost_type)
+			h = UnsupervisedModel(M, i, activation_type, cost_type)
 			self.hidden_layers.append(h)
 
 	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
