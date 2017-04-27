@@ -16,13 +16,13 @@ def init_weight_and_bias(M1, M2):
 
 def get_activation(activation_type):
 	if activation_type == 1:
-		return T.nnet.sigmoid
+		return T.nnet.relu
 	elif activation_type == 2:
 		return T.tanh
 	elif activation_type == 3:
-		return T.nnet.relu
-	else:
 		return elu
+	else:
+		return T.nnet.sigmoid
 
 
 def elu(X):
