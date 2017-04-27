@@ -72,18 +72,23 @@ class DNN(object):
 		self.predict_op = theano.function(inputs=[thX], outputs=prediction)
 		cost_predict_op = theano.function(inputs=[thX, thY], outputs=[cost, prediction])
 
-		updates = []
-		for p, dp in zip(self.params, dparams):
-			updates += [
-				(p, p + mu*dp - lr*T.grad(cost, p)),
-				(dp, mu*dp - lr*T.grad(cost, p))
-			]
+		# updates with momentum optional
+		if mu > 0:
+			updates = []
+			for p, dp in zip(self.params, dparams):
+				updates += [
+					(p, p + mu*dp - lr*T.grad(cost, p)),
+					(dp, mu*dp - lr*T.grad(cost, p))
+				]
+		else:
+			updates = [(p, p - lr*T.grad(cost, p)) for p in self.params]
 
 		train_op = theano.function(inputs=[thX, thY], updates=updates)
 
 		if debug:
 			print('\nSupervised training:')
 			costs = []
+
 		for i in range(epochs):
 			X, Y = shuffle(X, Y)
 			for j in range(n_batches):
