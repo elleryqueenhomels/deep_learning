@@ -38,7 +38,7 @@ class DNN(object):
 			batch_sz = N
 		n_batches = N // batch_sz
 
-		# greedy layer-wise training of Unsupervised Model, e.g. AutoEncoder, RBM, etc.
+		# greedy layer-wise pretraining of Unsupervised Model, e.g. AutoEncoder, RBM, etc.
 		if not pretrain:
 			pretrain_epochs = 0
 
