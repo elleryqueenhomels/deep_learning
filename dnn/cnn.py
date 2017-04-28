@@ -50,7 +50,7 @@ class ConvPoolLayer(object):
 
 
 class CNN(object):
-	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None, UnsupervisedModel=AutoEncoder, activation_type=1, cost_type=1):
+	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None, UnsupervisedModel=AutoEncoder, convpool_activation=1, hidden_activation=1, hidden_cost=1):
 		self.conv_layer_sizes = conv_layer_sizes
 		if pool_layer_sizes is None:
 			pool_layer_sizes = [(2, 2) for i in range(len(conv_layer_sizes))]
@@ -58,9 +58,9 @@ class CNN(object):
 		assert(len(conv_layer_sizes) == len(pool_layer_sizes))
 		self.hidden_layers = []
 		for i, M in enumerate(hidden_layer_sizes):
-			h = UnsupervisedModel(M, i, activation_type, cost_type)
+			h = UnsupervisedModel(M, i, activation_type=hidden_activation, cost_type=hidden_cost)
 			self.hidden_layers.append(h)
-		self.activation_type = activation_type
+		self.activation_type = convpool_activation
 
 	def fit(self, X, Y, Xtest=None, Ytest=None, epochs=1, batch_sz=100, pretrain=True, pretrain_epochs=1, pretrain_batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, learning_rate=0.01, momentum=0.99, debug=False, print_period=20, show_fig=False):
 		# Use float32 for GPU accelerated
