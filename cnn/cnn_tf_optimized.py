@@ -8,7 +8,7 @@ from sklearn.utils import shuffle
 
 
 class ConvPoolLayer(object):
-	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2)):
+	def __init__(self, mi, mo, fw, fh, poolsz=(2, 2), activation_type=1):
 		# mi = number of input feature maps
 		# mo = number of output feature maps
 		# fw = filter width
@@ -20,6 +20,7 @@ class ConvPoolLayer(object):
 		self.b = tf.Variable(b)
 		self.poolsz = poolsz
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
 		# X.shape = (N, xw, xh, c)
@@ -36,28 +37,31 @@ class ConvPoolLayer(object):
 		# outw = int(yw / poolsz[0])
 		# outh = int(yh / poolsz[1])
 		# b.shape = (mo,)
-		return tf.tanh(pool_out)
+		return self.activation(pool_out)
 
 
 class HiddenLayer(object):
-	def __init__(self, M1, M2):
+	def __init__(self, M1, M2, activation_type=1):
 		W, b = init_weight_and_bias(M1, M2)
 		self.W = tf.Variable(W)
 		self.b = tf.Variable(b)
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
-		return tf.nn.relu(tf.matmul(X, self.W) + self.b)
+		return self.activation(tf.matmul(X, self.W) + self.b)
 
 
 class CNN(object):
-	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None):
+	def __init__(self, conv_layer_sizes, hidden_layer_sizes, pool_layer_sizes=None, convpool_activation=1, hidden_activation=1):
 		self.conv_layer_sizes = conv_layer_sizes
 		self.hidden_layer_sizes = hidden_layer_sizes
 		if pool_layer_sizes is None:
 			pool_layer_sizes = [(2, 2) for i in range(len(conv_layer_sizes))]
 		self.pool_layer_sizes = pool_layer_sizes
 		assert(len(conv_layer_sizes) == len(pool_layer_sizes))
+		self.convpool_activation = convpool_activation
+		self.hidden_activation = hidden_activation
 
 	def fit(self, X, Y, epochs=1000, batch_sz=100, learning_rate=10e-6, decay=0, momentum=0, reg_l2=0, debug=False, cal_train=False, debug_points=100, valid_set=None):
 		# use float32 for GPU mode
@@ -105,7 +109,7 @@ class CNN(object):
 		self.convpool_layers = []
 		for convsz, poolsz in zip(self.conv_layer_sizes, self.pool_layer_sizes):
 			mo, fw, fh = convsz
-			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz)
+			cp = ConvPoolLayer(mi, mo, fw, fh, poolsz, activation_type=self.convpool_activation)
 			self.convpool_layers.append(cp)
 			outw = int(outw / poolsz[0])
 			outh = int(outh / poolsz[1])
@@ -115,7 +119,7 @@ class CNN(object):
 		self.hidden_layers = []
 		M1 = mi * outw * outh # Here, mi == self.conv_layer_sizes[-1][0]
 		for M2 in self.hidden_layer_sizes:
-			h = HiddenLayer(M1, M2)
+			h = HiddenLayer(M1, M2, activation_type=self.hidden_activation)
 			self.hidden_layers.append(h)
 			M1 = M2
 
@@ -286,6 +290,17 @@ def init_weight_and_bias(M1, M2):
 	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
 	b = np.zeros(M2)
 	return W.astype(np.float32), b.astype(np.float32)
+
+
+def get_activation(activation_type):
+	if activation_type == 1:
+		return tf.nn.relu
+	elif activation_type == 2:
+		return tf.tanh
+	elif activation_type == 3:
+		return tf.nn.elu
+	else:
+		return tf.nn.sigmoid
 
 
 def classification_rate(T, P):
