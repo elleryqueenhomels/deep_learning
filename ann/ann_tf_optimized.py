@@ -8,19 +8,14 @@ from sklearn.utils import shuffle # If no sklean installed, just use: _shuffle
 
 class HiddenLayer(object):
 	def __init__(self, M1, M2, activation_type=1):
-		self.activation_type = activation_type
 		W, b = init_weight_and_bias(M1, M2)
 		self.W = tf.Variable(W)
 		self.b = tf.Variable(b)
 		self.params = [self.W, self.b]
+		self.activation = get_activation(activation_type)
 
 	def forward(self, X):
-		if self.activation_type == 1:
-			return tf.nn.relu(tf.matmul(X, self.W) + self.b)
-		elif self.activation_type == 2:
-			return tf.tanh(tf.matmul(X, self.W) + self.b)
-		else:
-			return tf.nn.sigmoid(tf.matmul(X, self.W) + self.b)
+		return self.activation(tf.matmul(X, self.W) + self.b)
 
 
 class ANN(object):
@@ -230,6 +225,16 @@ def init_weight_and_bias(M1, M2):
 	W = np.random.randn(M1, M2) / np.sqrt(M1 + M2)
 	b = np.zeros(M2)
 	return W.astype(np.float32), b.astype(np.float32)
+
+def get_activation(activation_type):
+	if activation_type == 1:
+		return tf.nn.relu
+	elif activation_type == 2:
+		return tf.tanh
+	elif activation_type == 3:
+		return tf.nn.elu
+	else:
+		return tf.nn.sigmoid
 
 def classification_rate(targets, predictions):
 	return np.mean(targets == predictions)
