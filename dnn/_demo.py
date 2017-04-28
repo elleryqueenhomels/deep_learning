@@ -43,7 +43,7 @@ def test_cnn(Xtrain, Ytrain, Xtest, Ytest):
 	Xtrain = Xtrain.reshape(N, 1, d, d)
 	Xtest = Xtest.reshape(len(Xtest), 1, d, d)
 
-	cnn = CNN([(20, 5, 5), (50, 5, 5)], hidden_layer_sizes=[1000, 750, 500], UnsupervisedModel=RBM, activation_type=1, cost_type=1)
+	cnn = CNN([(20, 5, 5), (50, 5, 5)], hidden_layer_sizes=[1000, 750, 500], UnsupervisedModel=RBM, convpool_activation=1, hidden_activation=1, hidden_cost=1)
 
 	cnn.fit(Xtrain, Ytrain, Xtest, Ytest, epochs=3, batch_sz=100, pretrain_lr=0.5, pretrain_mu=0, debug=True, show_fig=False)
 
