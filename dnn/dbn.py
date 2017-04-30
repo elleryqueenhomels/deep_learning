@@ -110,10 +110,12 @@ class DBN(object):
 
 			bestX = X.get_value()
 
-		if debug and show_fig:
-			plt.plot(costs)
-			plt.title('Costs')
-			plt.show()
+		if debug:
+			print('len(costs)=%d, max_cost=%.8f, min_cost=%.8f' % (len(costs), np.max(costs), np.min(costs)))
+			if show_fig:
+				plt.plot(costs)
+				plt.title('Costs')
+				plt.show()
 
 		return bestX
 
