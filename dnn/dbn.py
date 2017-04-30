@@ -119,7 +119,7 @@ class DBN(object):
 
 	def save(self, filename):
 		arrays = [p.get_value() for layer in self.hidden_layers for p in layer.params]
-		np.savez(*arrays)
+		np.savez(filename, *arrays)
 
 	@staticmethod
 	def load(filename, UnsupervisedModel=AutoEncoder, activation_type=1, cost_type=1):
