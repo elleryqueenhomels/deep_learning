@@ -63,12 +63,15 @@ class AutoEncoder(object):
 			outputs=cost
 		)
 
-		updates = []
-		for p, dp in zip(self.params, dparams):
-			updates += [
-				(p, p + mu*dp - lr*T.grad(cost, p)),
-				(dp, mu*dp - lr*T.grad(cost, p))
-			]
+		if mu > 0:
+			updates = []
+			for p, dp in zip(self.params, dparams):
+				updates += [
+					(p, p + mu*dp - lr*T.grad(cost, p)),
+					(dp, mu*dp - lr*T.grad(cost, p))
+				]
+		else:
+			updates = [(p, p - lr*T.grad(cost, p)) for p in self.params]
 
 		train_op = theano.function(
 			inputs=[X_in],
