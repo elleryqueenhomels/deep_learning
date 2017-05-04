@@ -136,8 +136,8 @@ class HMM(object):
 		delta[0] = np.log(self.pi) + np.log(self.B[:, x[0]])
 		for t in range(1, T):
 			for j in range(self.M):
-				delta[t,j] = np.max(np.log(delta[t-1]) + np.log(self.A[:,j])) + np.log(self.B[j, x[t]])
-				psi[t,j] = np.argmax(np.log(delta[t-1]) + np.log(self.A[:,j]))
+				delta[t,j] = np.max(delta[t-1] + np.log(self.A[:,j])) + np.log(self.B[j, x[t]])
+				psi[t,j] = np.argmax(delta[t-1] + np.log(self.A[:,j]))
 
 		# backtracking
 		p = np.max(delta[-1]) # if necessary, we can return this p -- probability of the hidden state sequence
