@@ -138,35 +138,3 @@ class HMM(object):
 			states[t] = psi[t+1, states[t+1]]
 		return states
 
-
-# demo
-def fit_coin():
-	X = []
-	for line in open('data_set/coin_data.txt'):
-		# 1 for H, 0 for T
-		x = [1 if e == 'H' else 0 for e in line.rstrip()]
-		X.append(x)
-
-	hmm = HMM(2)
-	hmm.fit(X, max_iter=30, seed=123, debug=True)
-	L = hmm.log_likelihood_multi(X).sum()
-	print('LL with fitted params:', L)
-
-	# try true values
-	hmm.pi = np.array([0.5, 0.5])
-	hmm.A = np.array([[0.1, 0.9], [0.8, 0.2]])
-	hmm.B = np.array([[0.6, 0.4], [0.3, 0.7]])
-	L = hmm.log_likelihood_multi(X).sum()
-	print('LL with true params:', L)
-
-	# try Viterbi
-	Y = np.array(X[0])
-	P = hmm.get_state_sequence(X[0])
-	print('True hidden state sequence:\n', Y)
-	print('Viterbi hidden state sequence:\n', P)
-	print('Accuracy: %.6f%%' % (np.mean(Y == P)*100))
-
-
-if __name__ == '__main__':
-	fit_coin()
-
