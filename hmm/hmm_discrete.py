@@ -80,7 +80,7 @@ class HMM(object):
 				for i in range(self.M):
 					for j in range(self.M):
 						for t in range(T-1):
-							a_num_n[i, j] += alphas[n][t,i] * self.A[i,j] * self.B[j, x[t]] * betas[n][t+1,j]
+							a_num_n[i, j] += alphas[n][t,i] * self.A[i,j] * self.B[j, x[t+1]] * betas[n][t+1,j]
 				a_num += a_num_n / P[n]
 
 				# numerator for B
