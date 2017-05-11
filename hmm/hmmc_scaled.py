@@ -87,7 +87,7 @@ class HMM(object):
 
 			if debug:
 				logP = np.log(scale).sum()
-				costs.append(logP)
+				costs.append(-logP)
 
 			beta = np.zeros((T, self.M))
 			beta[-1] = 1
