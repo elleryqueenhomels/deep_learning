@@ -63,9 +63,9 @@ class HMM(object):
 				train_op(X[n])
 
 		if debug:
+			print('pi:', self.pi.get_value())
 			print('A:', self.A.get_value())
 			print('B:', self.B.get_value())
-			print('pi:', self.pi.get_value())
 
 			plt.plot(costs)
 			plt.title('Costs (log-likelihood)')
