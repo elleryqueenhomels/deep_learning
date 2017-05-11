@@ -29,9 +29,9 @@ class HMM(object):
 		self.B = random_normalized(self.M, V) # observation distribution
 
 		if debug:
+			print('initial pi:\n', self.pi)
 			print('initial A:\n', self.A)
 			print('initial B:\n', self.B)
-			print('initial pi:\n', self.pi)
 
 		# update pi, A, B
 		costs = []
@@ -58,7 +58,7 @@ class HMM(object):
 				betas.append(beta)
 
 			if debug:
-				cost = np.sum(np.log(P))
+				cost = -np.sum(np.log(P))
 				costs.append(cost)
 
 			# M-step (Maximization Step)
@@ -94,9 +94,9 @@ class HMM(object):
 			self.B = b_num / den2
 
 		if debug:
+			print('updated pi:\n', self.pi)
 			print('updated A:\n', self.A)
 			print('updated B:\n', self.B)
-			print('updated pi:\n', self.pi)
 
 			plt.plot(costs)
 			plt.title('Costs (log-likelihood)')

@@ -91,7 +91,7 @@ class HMM(object):
 				gammas.append(gamma)
 
 			if debug:
-				cost = np.log(P).sum()
+				cost = -np.log(P).sum()
 				costs.append(cost)
 
 			# M-step (Maximization Step)
@@ -208,10 +208,10 @@ def real_signal():
 	# We also do this for images!
 	# 2^16 = 65536 is how many different sound levels we have
 	signal = spf.readframes(-1)
-	signal = np.fromstring(signal, 'Int16')
+	signal = np.fromstring(signal, dtype=np.int16)
 	T = len(signal)
 
-	hmm = HMM(10,5)
+	hmm = HMM(5,3)
 	hmm.fit(signal.reshape(1, T), debug=True)
 
 
