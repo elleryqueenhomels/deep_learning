@@ -37,6 +37,8 @@ class HMM(object):
 			if last > 0:
 				endPositions[last - 1] = 1
 			last += length
+		nonEndPositions = (1 - endPositions).astype(np.bool)
+		del sequenceLengths
 
 		D = X[0].shape[1] # assume each x is organized (T, D)
 
@@ -116,7 +118,6 @@ class HMM(object):
 			mu_num = np.zeros((self.M, self.K, D)) # numerator for mu
 			sigma_num = np.zeros((self.M, self.K, D, D)) # numerator for sigma
 
-			nonEndPositions = (1 - endPositions).astype(np.bool)
 			a_den = (alpha[nonEndPositions] * beta[nonEndPositions]).sum(axis=0, keepdims=True).T
 
 			# numeraotr for A
