@@ -181,6 +181,31 @@ class HMM(object):
 	def log_likelihood_multi(self, X):
 		return np.array([self.log_likelihood(x) for x in X])
 
+	def get_state_sequence(self, x):
+		# returns the most-likely hidden state sequence given the observed sequence x
+		# using the Viterbi Algorithm
+		T = len(x)
+		B = np.zeros((self.M, T))
+		for j in range(self.M):
+			for k in range(self.K):
+				B[j,:] += self.R[j,k] * mvn.pdf(x, self.mu[j,k], self.sigma[j,k])
+
+		delta = np.zeros((T, self.M))
+		psi = np.zeros((T, self.M))
+		delta[0] = np.log(self.pi) + np.log(B[:,0])
+		for t in range(1, T):
+			for j in range(self.M):
+				delta[t,j] = np.max(delta[t-1] + np.log(self.A[:,j])) + np.log(B[j,t])
+				psi[t,j] = np.argmax(delta[t-1] + np.log(self.A[:,j]))
+
+		# backtracking
+		p = np.max(delta[-1]) # if necessary, we can return this p -- probability of the hidden state sequence
+		states = np.zeros(T, dtype=np.int32)
+		states[-1] = np.argmax(delta[-1])
+		for t in range(T - 2, -1, -1):
+			states[t] = psi[t+1, states[t+1]]
+		return states
+
 	def set(self, pi, A, R, mu, sigma):
 		self.pi = pi
 		self.A = A
@@ -212,6 +237,9 @@ def real_signal():
 	LL = hmm.log_likelihood(signal.reshape(T, 1))
 	print('LL for fitted params:', LL)
 
+	states = hmm.get_state_sequence(signal.reshape(T, 1))
+	print('The most-likely hidden state sequence:\n', states)
+
 
 def fake_signal(init=complex_init):
 	signals = get_signals(init=init)
@@ -230,6 +258,9 @@ def fake_signal(init=complex_init):
 	hmm.set(pi, A, R, mu, sigma)
 	LL = hmm.log_likelihood_multi(signals).sum()
 	print('LL for actual params:', LL)
+
+	states = hmm.get_state_sequence(signals[0])
+	print('The most-likely hidden state sequence:\n', states)
 
 
 if __name__ == '__main__':
