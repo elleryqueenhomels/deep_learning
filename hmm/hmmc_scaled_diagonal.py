@@ -1,4 +1,5 @@
 # Continuous-observation HMM with scaling and multiple observations (treated as concatenated sequence)
+# Assume the covariance matrix is diagonal
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,12 +48,11 @@ class HMM(object):
 		self.A = random_normalized(self.M, self.M) # state transition matrix
 		self.R = np.ones((self.M, self.K)) / self.K # mixture proportions
 		self.mu = np.zeros((self.M, self.K, D))
-		self.sigma = np.zeros((self.M, self.K, D, D))
+		self.sigma = np.ones((self.M, self.K, D))
 		for j in range(self.M):
 			for k in range(self.K):
 				random_idx = np.random.choice(T)
 				self.mu[j,k] = Xc[random_idx]
-				self.sigma[j,k] = np.eye(D)
 
 		if debug:
 			print('initial pi:\n', self.pi)
@@ -116,7 +116,7 @@ class HMM(object):
 			r_den = np.zeros(self.M) # denominator for R
 			r_num = np.zeros((self.M, self.K)) # numerator for R
 			mu_num = np.zeros((self.M, self.K, D)) # numerator for mu
-			sigma_num = np.zeros((self.M, self.K, D, D)) # numerator for sigma
+			sigma_num = np.zeros((self.M, self.K, D)) # numerator for sigma
 
 			a_den = (alpha[nonEndPositions] * beta[nonEndPositions]).sum(axis=0, keepdims=True).T
 
@@ -135,15 +135,14 @@ class HMM(object):
 						r_num[j,k] += gamma[t,j,k]
 						r_den[j] += gamma[t,j,k]
 						mu_num[j,k] += gamma[t,j,k] * Xc[t]
-						diff = Xc[t] - self.mu[j,k]
-						sigma_num[j,k] += gamma[t,j,k] * np.outer(diff, diff)
+						sigma_num[j,k] += gamma[t,j,k] * (Xc[t] - self.mu[j,k])**2
 
 			# update R, mu, sigma
 			for j in range(self.M):
 				for k in range(self.K):
 					self.R[j,k] = r_num[j,k] / r_den[j]
 					self.mu[j,k] = mu_num[j,k] / r_num[j,k]
-					self.sigma[j,k] = sigma_num[j,k] / r_num[j,k] + np.eye(D) * eps
+					self.sigma[j,k] = sigma_num[j,k] / r_num[j,k] + np.ones(D) * eps
 			assert(np.all(self.R <= 1))
 			assert(np.all(self.A <= 1))
 
