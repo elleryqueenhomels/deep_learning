@@ -10,9 +10,9 @@ second_word = {}
 transitions = {}
 
 def remove_punctuation(s):
-	# return s.translate(None, string.punctuation)
-	# return s.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation)))
-	translator = str.maketrans('', '', string.punctuation)
+	# return s.translate(None, string.punctuation) # python 2.7
+	# return s.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation))) # not so good
+	translator = str.maketrans('', '', string.punctuation) # python 3.6
 	return s.translate(translator)
 
 def add2dict(d, k, v):
