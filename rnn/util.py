@@ -56,7 +56,8 @@ def all_parity_pairs_with_sequence_labels(nbit):
 
 
 def remove_punctuation(s):
-	translator = str.maketrans('', '', string.punctuation)
+	# return s.translate(None, string.punctuation) # python 2.7
+	translator = str.maketrans('', '', string.punctuation) # python 3.6
 	return s.translate(translator)
 
 
