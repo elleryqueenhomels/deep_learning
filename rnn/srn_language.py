@@ -216,7 +216,7 @@ class SimpleRNN(object):
 				sentence.append(word)
 			elif P == 1:
 				n_lines += 1
-				sentence.append('\n')
+				# sentence.append('\n')
 				sentences.append(' '.join(sentence))
 				if n_lines < lines:
 					X = [np.random.choice(V, p=pi)]
@@ -243,7 +243,7 @@ def generate_poetry():
 	V = len(word2idx)
 	pi = np.zeros(V)
 	for sentence in sentences:
-		pi[word2idx[sentence[0]]] += 1
+		pi[sentence[0]] += 1
 	pi /= pi.sum()
 
 	rnn.generate(pi, word2idx)
