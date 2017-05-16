@@ -3,6 +3,7 @@
 import numpy as np
 import theano
 import theano.tensor as T
+import string
 
 
 def init_weight(Mi, Mo):
@@ -52,4 +53,28 @@ def all_parity_pairs_with_sequence_labels(nbit):
 
 	X = X.reshape(N, T, 1).astype(np.float32)
 	return X, Y_T
+
+
+def remove_punctuation(s):
+	translator = str.maketrans('', '', string.punctuation)
+	return s.translate(translator)
+
+
+def get_robert_frost():
+	word2idx = {'START': 0, 'END': 1}
+	current_idx = 2
+	sentences = []
+	for line in open('../data_set/robert_frost.txt'):
+		line = line.strip()
+		if line:
+			tokens = remove_punctuation(line.lower()).split()
+			sentence = []
+			for t in tokens:
+				if t not in word2idx:
+					word2idx[t] = current_idx
+					current_idx += 1
+				idx = word2idx[t]
+				sentence.append(idx)
+			sentences.append(sentence)
+	return sentences, word2idx
 

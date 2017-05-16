@@ -39,7 +39,9 @@ class HMMClassifier(object):
 
 
 def remove_punctuation(s):
-	return s.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation)))
+	# return s.translate(str.maketrans(string.punctuation, ' ' * len(string.punctuation)))
+	translator = str.maketrans('', '', string.punctuation)
+	return s.translate(translator)
 
 
 def get_tags(s):
