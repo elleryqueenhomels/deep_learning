@@ -21,7 +21,7 @@ def complex_init():
 	K = 3 # number of Gaussians
 	D = 2 # number of dimensionalities
 
-	pi = np.array([1, 0, 0, 0, 0]) # initial state distribution
+	pi = np.array([1., 0., 0., 0., 0.]) # initial state distribution
 
 	A = np.array([
 		[0.9, 0.025, 0.025, 0.025, 0.025],
