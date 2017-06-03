@@ -125,14 +125,14 @@ class SimpleRNN(object):
 				score = float(n_correct) / N
 				print('py_x.shape:', out.shape)
 				print('epoch: %d, cost: %.6f, score: %.6f%%' % (i, cost, score*100))
-			if n_correct == N:
-				score = float(n_correct) / N
-				print('epoch: %d, cost: %.6f, score: %.6f%%' % (i, cost, score*100))
-				break
+				if n_correct == N:
+					score = float(n_correct) / N
+					print('epoch: %d, cost: %.6f, score: %.6f%%' % (i, cost, score*100))
+					break
 
 		if debug:
 			plt.plot(costs)
-			plt.title('Cross-Entropy Costs')
+			plt.title('Cross-Entropy Cost')
 			plt.show()
 
 
