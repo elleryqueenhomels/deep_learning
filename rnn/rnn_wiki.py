@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from datetime import datetime
 from sklearn.utils import shuffle
 from gru import GRU
 from lstm import LSTM
@@ -110,10 +109,10 @@ class RNN(object):
 			X = shuffle(X)
 			for j in range(N):
 				if np.random.random() < 0.01 or len(X[j]) < 2:
-					input_sequence = [0] + X[j]
+					input_sequence  = [0] + X[j]
 					output_sequence = X[j] + [1]
 				else:
-					input_sequence = [0] + X[j][:-1]
+					input_sequence  = [0] + X[j][:-1]
 					output_sequence = X[j]
 				if debug:
 					n_total += len(output_sequence)
@@ -160,7 +159,7 @@ def train_wikipedia(we_file='word_embeddings.npy', w2i_file='wikipedia_word2idx.
 
 	if debug:
 		from datetime import datetime
-		print('\bFinished retriving data...')
+		print('\nFinished retriving data...')
 		print('vocab size: %d, number of sentences: %d\n' % (len(word2idx), len(sentences)))
 		t0 = datetime.now()
 
