@@ -3,13 +3,12 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from sklearn.utils import shuffle
-from util import init_weight, get_robert_frost, get_wikipedia_data
-from brown_corpus import get_sentences_with_word2idx_limit_vocab
+from util import init_weight, get_robert_frost
 
 
 class SimpleRNN(object):
 	def __init__(self, D, M, V, session, activation=tf.nn.relu):
-		self.D = D # dimensionality of word embedding
+		self.D = D # dimensionality of word embeddings
 		self.M = M # hidden layer size
 		self.V = V # vocabulary size
 		self.f = activation
@@ -19,7 +18,7 @@ class SimpleRNN(object):
 		self.session = session
 
 	def build(self, We, Wx, Wh, bh, h0, Wo, bo):
-		# make them tf Variables
+		# make them TF variables
 		self.We = tf.Variable(We)
 		self.Wx = tf.Variable(Wx)
 		self.Wh = tf.Variable(Wh)
@@ -45,16 +44,17 @@ class SimpleRNN(object):
 		# X_one_hot = one_hot_encode(X)
 		# X_one_hot.dot(We)
 		XWe = tf.nn.embedding_lookup(self.We, self.tfX)
+		XWx = tf.matmul(XWe, self.Wx)
 
-		def recurrence(h_t1, xwe_t):
+		def recurrence(h_t1, xwx_t):
 			h_t1 = tf.reshape(h_t1, [1, M])
-			h_t = self.f(xwe_t + tf.matmul(h_t1, self.Wh) + self.bh)
-			h_t = tf.reshape(h_t, [M, ])
+			h_t  = self.f(xwx_t + tf.matmul(h_t1, self.Wh) + self.bh)
+			h_t  = tf.reshape(h_t, [M, ])
 			return h_t
 
 		h = tf.scan(
 			fn=recurrence,
-			elems=XWe,
+			elems=XWx,
 			initializer=self.h0
 		)
 
@@ -64,7 +64,7 @@ class SimpleRNN(object):
 		self.output_probs = tf.nn.softmax(logits)
 
 		nce_weights = tf.transpose(self.Wo, [1, 0]) # need to be (V, M), not (M, V)
-		nec_biases  = self.bo
+		nce_biases  = self.bo
 
 		h = tf.reshape(h, [-1, M])
 		labels = tf.reshape(self.tfY, [-1, 1])
@@ -72,7 +72,7 @@ class SimpleRNN(object):
 		self.cost = tf.reduce_mean(
 			tf.nn.sampled_softmax_loss(
 				weights=nce_weights,
-				biases=nec_biases,
+				biases=nce_biases,
 				labels=labels,
 				inputs=h,
 				num_sampled=50, # number of negative samples
@@ -108,36 +108,36 @@ class SimpleRNN(object):
 		train_op = tf.train.AdamOptimizer(lr).minimize(self.cost)
 		# train_op = tf.train.MomentumOptimizer(lr, momentum=mu).minimize(self.cost)
 
-		# init all variables
+		# initialize all variables
 		sess.run(tf.global_variables_initializer())
 
-		# sentence input:
-		# [START, w1, w2, ..., wn]
-		# sentence target:
-		# [w1,    w2, w3, ..., END]
+		# sentence input
+		# [START, w1, w2, ... , wn]
+		# sentence target
+		# [w1,    w2, w3, ... , END]
 
 		costs = []
 		for i in range(epochs):
 			X = shuffle(X)
 			if debug:
 				cost = 0
-				n_correct = 0
 				n_total = 0
+				n_correct = 0
 
 			for j in range(N):
 				if np.random.random() < 0.1 or len(X[j]) < 2:
-					input_sequence = [0] + X[j]
+					input_sequence  = [0] + X[j]
 					output_sequence = X[j] + [1]
 				else:
-					input_sequence = [0] + X[j][:-1]
+					input_sequence  = [0] + X[j][:-1]
 					output_sequence = X[j]
 
 				if debug:
 					ops = [train_op, self.cost, self.predict_op]
 					_, c, p = sess.run(ops, feed_dict={self.tfX: input_sequence, self.tfY: output_sequence})
 					cost += c
-					n_correct += np.sum(np.array(output_sequence) == np.array(p))
 					n_total += len(output_sequence)
+					n_correct += np.sum(np.array(output_sequence) == p)
 				else:
 					sess.run(train_op, feed_dict={self.tfX: input_sequence, self.tfY: output_sequence})
 
@@ -192,8 +192,8 @@ class SimpleRNN(object):
 		sentence = []
 
 		while n_lines < lines:
-			PY_X = self.predict(np.array(X))
-			PY_X = PY_X[-1]
+			PY_X = self.predict(X) # PY_X: (T, V)
+			PY_X = PY_X[-1] # (V, )
 			P = np.random.choice(V, p=PY_X)
 			X.append(P)
 			if P > 1:
@@ -228,9 +228,9 @@ def generate_poetry(session, savefile):
 
 
 if __name__ == '__main__':
-	D = 50
+	D = 30
 	M = 50
-	savefile = 'TF_RNN_D50_M50.npz'
+	savefile = 'TF_RNN_D30_M50.npz'
 	session = tf.InteractiveSession()
 	train_poetry(session, D, M, savefile)
 	generate_poetry(session, savefile)
