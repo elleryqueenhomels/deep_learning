@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from datetime import datetime
 from sklearn.utils import shuffle
 from batch_gru import GRU
 from batch_lstm import LSTM
@@ -114,7 +113,7 @@ class RNN(object):
 				output_sequence = []
 				for k in range(j*batch_sz, (j+1)*batch_sz):
 					# don't always add the end token
-					if np.random.random() < 0.01 or len(X[j]) < 2:
+					if np.random.random() < 0.01 or len(X[k]) < 2:
 						input_sequence += [0] + X[k]
 						output_sequence += X[k] + [1]
 						sequenceLengths.append(len(X[k]) + 1)
@@ -136,7 +135,7 @@ class RNN(object):
 					n_total += len(output_sequence)
 					if j % print_period == 0:
 						score = float(n_correct) / n_total
-						print('j/N: %d/%d correct rate so far: %.6f%%\r' % (j, N, score*100))
+						print('batch/n_batches: %d/%d correct rate so far: %.6f%%\r' % (j, n_batches, score*100))
 						# sys.stdout.write('j/N: %d/%d correct rate so far: %.6f%%\r' % (j, N, score*100))
 						# sys.stdout.flush()
 				else:
@@ -161,7 +160,7 @@ def train_wikipedia(we_file='word_embeddings.npy', w2i_file='wikipedia_word2idx.
 
 	if debug:
 		from datetime import datetime
-		print('\bFinished retriving data...')
+		print('\nFinished retriving data...')
 		print('vocab size: %d, number of sentences: %d\n' % (len(word2idx), len(sentences)))
 		t0 = datetime.now()
 
