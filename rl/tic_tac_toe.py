@@ -1,4 +1,4 @@
-# Simple Reinforcement Learning Algoritm for learning tic-tac-toe
+# Simple Reinforcement Learning Algorithm for learning tic-tac-toe
 # Use the update rule: V(s) = V(s) + alpha * (V(s') - V(s))
 # Use the Epsilon-Greedy policy:
 #   action|s = argmax[over all possible actions from state s]{ V(s) }  if rand > epsilon
@@ -33,7 +33,7 @@ class Environment:
 		self.num_states = 3**(LENGTH * LENGTH)
 
 	def is_empty(self, i, j):
-		return self.board[i,j] == self.empty
+		return self.board[i, j] == self.empty
 
 	def reward(self, sym):
 		# no reward until game is over
@@ -148,14 +148,16 @@ class Agent:
 		self.state_history = []
 
 	def setV(self, V):
+		# V is a hash table, mapping state -> value
+		# state is represented by an integer
 		self.V = V
 
 	def set_symbol(self, sym):
-		self.sym  = sym
+		self.sym = sym # env.x or env.o
 
-	def set_verbose(self, v):
-		# if true, will print values for each position on the board
-		self.verbose = v
+	def set_verbose(self, verbose):
+		# if true, will print values for each empty position on the board
+		self.verbose = verbose
 
 	def reset_history(self):
 		self.state_history = []
@@ -187,9 +189,9 @@ class Agent:
 				for j in range(LENGTH):
 					if env.is_empty(i, j):
 						# what is the state if we made this move?
-						env.board[i,j] = self.sym
+						env.board[i, j] = self.sym
 						state = env.get_state()
-						env.board[i,j] = env.empty # don't forget to change it back!
+						env.board[i, j] = env.empty # don't forget to change it back!
 						pos2value[(i,j)] = self.V[state]
 						if self.V[state] > best_value:
 							best_value = self.V[state]
@@ -207,9 +209,9 @@ class Agent:
 						if env.is_empty(i, j):
 							row += '%.3f' % pos2value[(i,j)]
 						else:
-							if env.board[i,j] == env.x:
+							if env.board[i, j] == env.x:
 								row += '  x  '
-							elif env.board[i,j] == env.o:
+							elif env.board[i, j] == env.o:
 								row += '  o  '
 					row += '|'
 					print(row)
@@ -246,7 +248,7 @@ class Human:
 		pass
 
 	def set_symbol(self, sym):
-		self.sym = sym
+		self.sym = sym # env.x or env.o
 
 	def take_action(self, env):
 		while True:
@@ -274,7 +276,7 @@ def get_state_hash_and_winner(env, i=0, j=0):
 	results = []
 
 	for v in (env.empty, env.x, env.o):
-		env.board[i,j] = v # if empty board it should already be 0 (empty)
+		env.board[i, j] = v # if empty board it should already be 0 (empty)
 		if j == LENGTH - 1:
 			# j goes back to 0, increase i, unless i == LENGTH - 1, then we are done
 			if i == LENGTH - 1:
@@ -286,7 +288,7 @@ def get_state_hash_and_winner(env, i=0, j=0):
 			else:
 				results += get_state_hash_and_winner(env, i + 1, 0)
 		else:
-			# increse j, i remains the same
+			# increase j, i remains the same
 			results += get_state_hash_and_winner(env, i, j + 1)
 
 	return results
@@ -343,13 +345,15 @@ def play_game(p1, p2, env, draw=False):
 	p1.update(env)
 	p2.update(env)
 
+	return env.winner
+
 
 def main():
 	# train the agent
 	p1 = Agent()
 	p2 = Agent()
 
-	# set intial V for p1 and p2
+	# set initial V for p1 and p2
 	env = Environment()
 	state_winner_triples = get_state_hash_and_winner(env)
 
@@ -373,10 +377,16 @@ def main():
 	human.set_symbol(env.o)
 	while True:
 		p1.set_verbose(True)
-		play_game(p1, human, Environment(), draw=2)
+		winner = play_game(p1, human, Environment(), draw=2)
 		# make the agent player 1 because I want to see if it would
 		# select the center as its starting move. If you want the agent
-		# to go  second you can switch the human an AI.
+		# to go second you can switch the human and AI.
+		if winner is None:
+			print('It is a draw!')
+		elif winner == human.sym:
+			print('You win!')
+		else:
+			print('You lose!')
 		answer = input('Play again? [Y/N]:')
 		if answer[0] in ('n', 'N'):
 			break
