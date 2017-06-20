@@ -254,8 +254,22 @@ class Human:
 		while True:
 			# break if we make a legal move
 			move = input('Enter coordinates i, j for your move (i,j = 0, 1, 2):')
-			i, j = move.split(',')
+			if ',' not in move:
+				print('Use a comma to seperate i and j')
+				continue
+			res = move.split(',')
+			if len(res) != 2:
+				print('Use the input format: i,j')
+				continue
+			i, j = res[0], res[1]
+			i, j = i.strip(), j.strip()
+			if not i.isdigit() or not j.isdigit():
+				print('i and j must be integer')
+				continue
 			i, j = int(i), int(j)
+			if i < 0 or i > 2 or j < 0 or j > 2:
+				print('i and j must be in range [0, 2]')
+				continue
 			if env.is_empty(i, j):
 				env.board[i, j] = self.sym
 				break
@@ -375,8 +389,9 @@ def main():
 	# play human vs. agent
 	human = Human()
 	human.set_symbol(env.o)
+	p1.set_verbose(True)
+	p1.eps = 0
 	while True:
-		p1.set_verbose(True)
 		winner = play_game(p1, human, Environment(), draw=2)
 		# make the agent player 1 because I want to see if it would
 		# select the center as its starting move. If you want the agent
