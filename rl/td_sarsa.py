@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
 	# what's the proportion of time we spend updating each part of Q?
 	print('Update Counts:')
-	total = np.sum(update_counts.values())
+	total = np.sum(list(update_counts.values()))
 	for k, v in update_counts.items():
 		update_counts[k] = float(v) / total
 	print_values(update_counts, grid)
