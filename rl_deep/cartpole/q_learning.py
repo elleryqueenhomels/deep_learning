@@ -114,7 +114,14 @@ def play_one(model, eps, gamma, max_iters=2000):
 
 
 def main():
-	env = gym.make('CartPole-v0')
+	gym.envs.register(
+		id='MyCartPole-v0',
+		entry_point='gym.envs.classic_control:CartPoleEnv',
+		max_episode_steps=10000,
+		reward_threshold=9975.0,
+	)
+	env = gym.make('MyCartPole-v0')
+	# env = gym.make('CartPole-v0')
 	ft = FeatureTransformer(env)
 
 	if 'monitor' in sys.argv:
