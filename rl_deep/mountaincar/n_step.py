@@ -81,7 +81,7 @@ def play_one(model, eps, gamma, n=5, max_iters=10000):
 	else:
 		rewards = rewards[-n+1:]
 		states = states[-n+1:]
-		actions = states[-n+1:]
+		actions = actions[-n+1:]
 
 	# new version of gym cuts us off at 200 steps
 	# even if we haven't reached the goal.
@@ -119,22 +119,22 @@ def main():
 	)
 	env = gym.make('MyMountainCar-v0')
 	# env = gym.make('MountainCar-v0')
-	ft = FeatureTransformer(env)
+	ft = FeatureTransformer(env, n_components=1000, n_samples=20000)
 
 	if 'monitor' in sys.argv:
 		filename = os.path.basename(__file__).split('.')[0]
 		monitor_dir = './' + filename + '_' + str(datetime.now())
 		env = wrappers.Monitor(env, monitor_dir)
 
-	model = Model(env, ft)
+	model = Model(env, ft, learning_rate=1e-2)
 	gamma = 0.99
 
 	N = 300
 	totalrewards = np.empty(N)
 	for n in range(N):
 		# eps = 1.0 / (0.1*n + 1)
-		# eps = 1.0 / np.sqrt(n + 1)
-		eps = 0.1 * (0.97**n)
+		eps = 1.0 / np.sqrt(n + 1)
+		# eps = 0.1 * (0.97**n)
 		totalreward = play_one(model, eps, gamma)
 		totalrewards[n] = totalreward
 		print('episode: %d, current reward: %s' % (n, totalreward))
