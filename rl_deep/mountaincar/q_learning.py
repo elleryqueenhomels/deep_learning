@@ -142,8 +142,15 @@ def plot_running_avg(totalrewards):
 	plt.show()
 
 
-if __name__ == '__main__':
-	env = gym.make('MountainCar-v0')
+def main():
+	gym.envs.register(
+		id='MyMountainCar-v0',
+		entry_point='gym.envs.classic_control:MountainCarEnv',
+		max_episode_steps=10000,
+		reward_threshold=-5500,
+	)
+	env = gym.make('MyMountainCar-v0')
+	# env = gym.make('MountainCar-v0')
 	ft = FeatureTransformer(env)
 
 	if 'monitor' in sys.argv:
@@ -177,4 +184,8 @@ if __name__ == '__main__':
 
 	# plot the negative optimal state-value function
 	plot_cost_to_go(env, model)
+
+
+if __name__ == '__main__':
+	main()
 
