@@ -139,7 +139,7 @@ def main():
 		totalreward = play_one(model, eps, gamma)
 		totalrewards[n] = totalreward
 		if n % 100 == 0:
-			print('episode:', n, 'total reward:', totalreward, 'eps:', eps, 'avg reward (last 100):', totalrewards[max(0, n-100):(n+1)].mean())
+			print('episode:', n, 'total reward:', totalreward, 'eps:', eps, 'avg reward (last 100):', totalrewards[max(0, n-99):(n+1)].mean())
 
 	print('avg reward for last 100 episodes:', totalrewards[-100:].mean())
 	print('total steps:', totalrewards.sum())
