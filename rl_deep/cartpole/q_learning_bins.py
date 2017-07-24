@@ -108,7 +108,7 @@ def plot_running_avg(totalrewards):
 	plt.show()
 
 
-if __name__ == '__main__':
+def main():
 	env = gym.make('CartPole-v0')
 	ft = FeatureTransformer()
 
@@ -137,4 +137,8 @@ if __name__ == '__main__':
 	plt.show()
 
 	plot_running_avg(totalrewards)
+
+
+if __name__ == '__main__':
+	main()
 
