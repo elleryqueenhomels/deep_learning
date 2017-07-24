@@ -60,7 +60,7 @@ class FeatureTransformer:
 
 # Holds one SGDRegressor for each action
 class Model:
-	def __init__(self, env, feature_transformer, learning_rate):
+	def __init__(self, env, feature_transformer, learning_rate='constant'):
 		self.env = env
 		self.models = []
 		self.feature_transformer = feature_transformer
