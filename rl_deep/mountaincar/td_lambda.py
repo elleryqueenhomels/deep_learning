@@ -40,7 +40,8 @@ class Model:
 		D = feature_transformer.dimensions
 		# eligibility: e(0) = 0, e(t) = gradient + gamma * lambda * e(t-1)
 		# gradient = d[V(S(t))] / d[theta]
-		self.eligibilities = np.zeros((env.action_space.n, D))
+		self.eligibilities_shape = (env.action_space.n, D)
+		self.eligibilities = np.zeros(self.eligibilities_shape)
 		for i in range(env.action_space.n):
 			model = BaseModel(D)
 			self.models.append(model)
@@ -65,8 +66,12 @@ class Model:
 		else:
 			return np.argmax(self.predict(s))
 
+	def reset_eligibilities(self):
+		self.eligibilities = np.zeros(self.eligibilities_shape)
+
 
 def play_one(model, eps, gamma, lambda_, max_iters=10000):
+	model.reset_eligibilities()
 	observation = model.env.reset()
 	done = False
 	totalreward = 0
