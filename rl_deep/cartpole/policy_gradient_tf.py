@@ -193,8 +193,8 @@ def play_one_mc(env, pmodel, vmodel, gamma, max_iters=3000):
 		prev_observation = observation
 		observation, reward, done, info = env.step(action)
 
-		if done:
-			reward = -200
+		# if done:
+		# 	reward = -200
 
 		if reward == 1: # if we changed the reward to -200 while done
 			totalreward += reward
