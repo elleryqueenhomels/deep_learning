@@ -242,7 +242,7 @@ def main():
 	K = env.action_space.n
 
 	pmodel = PolicyModel(D, K, hidden_layer_sizes=[], activation=tf.nn.tanh)
-	vmodel = ValueModel(D, hidden_layer_sizes=[10], activation=tf.nn.tanh)
+	vmodel = ValueModel(D, hidden_layer_sizes=[30], activation=tf.nn.tanh)
 
 	init = tf.global_variables_initializer()
 	session = tf.InteractiveSession()
