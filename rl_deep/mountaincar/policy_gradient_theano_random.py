@@ -105,7 +105,7 @@ class PolicyModel:
 			return -0.5*(k1 + k2)
 
 		log_probs = log_pdf(actions, mean, var)
-		cost = -T.sum(advantages * log_probs + 0.1 * T.log(2*np.pi*var)) + mean.dot(mean)
+		cost = -T.sum(advantages * log_probs + 0.1 * T.log(2*np.pi*var)) + 0.1 * mean.dot(mean)
 
 		self.get_log_probs = theano.function(
 			inputs=[X, actions],
