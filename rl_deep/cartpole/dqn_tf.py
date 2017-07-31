@@ -30,6 +30,7 @@ class HiddenLayer:
 		return self.f(a)
 
 
+# approximate Q(s, a) for all a, i.e. input s (shape=[N, D]), output Q (shape=[N, K])
 class DQN:
 	def __init__(self, D, K, hidden_layer_sizes, gamma, activation=tf.tanh, max_experiences=10000, min_experiences=100, batch_sz=32):
 		self.K = K
