@@ -39,19 +39,17 @@ def update_state(state, observation):
 
 class DQN:
 	def __init__(self, D, K, conv_layer_sizes, hidden_layer_sizes, scope, activation_conv=tf.nn.relu, activation_hidden=tf.nn.relu):
-
 		self.K = K
 		self.scope = scope
 
 		with tf.variable_scope(scope):
-
 			# inputs and targets
 			# D == (STACK_FRAMES, IMG_SIZE, IMG_SIZE)
 			# self.X = tf.placeholder(tf.float32, shape=(None, STACK_FRAMES, IMG_SIZE, IMG_SIZE), name='X')
 			self.X = tf.placeholder(tf.float32, shape=(None, *D), name='X')
 			# tensorflow convolution needs the order to be:
 			# (num_samples, height, width, channels)
-			# so we need to transpose later
+			# so we need to transpose it later
 			self.G = tf.placeholder(tf.float32, shape=(None, ), name='G')
 			self.actions = tf.placeholder(tf.int32, shape=(None, ), name='actions')
 
@@ -59,7 +57,7 @@ class DQN:
 			# convolutional layers
 			# these built-in layers are faster and don't require us to
 			# calculate the size of the output of the final conv layer
-			Z = self.X / 255.0
+			Z = self.X / 255.0 # normalize to 0..1
 			Z = tf.transpose(Z, [0, 2, 3, 1])
 			for num_output_filters, filtersz, poolsz in conv_layer_sizes:
 				Z = tf.contrib.layers.conv2d(
@@ -94,9 +92,11 @@ class DQN:
 			self.cost = cost
 
 	def copy_from(self, other):
-		self_params = [v for v in tf.trainable_variables() if v.name.startswith(self.scope)]
+		# self_params = [v for v in tf.trainable_variables() if v.name.startswith(self.scope)]
+		self_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope)
 		self_params = sorted(self_params, key=lambda v: v.name)
-		other_params = [v for v in tf.trainable_variables() if v.name.startswith(other.scope)]
+		# other_params = [v for v in tf.trainable_variables() if v.name.startswith(other.scope)]
+		other_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=other.scope)
 		other_params = sorted(other_params, key=lambda v: v.name)
 
 		ops = []
@@ -114,15 +114,14 @@ class DQN:
 		return self.session.run(self.predict_op, feed_dict={self.X: states})
 
 	def update(self, states, actions, targets):
-		c, _ = self.session.run(
-			[self.cost, self.train_op],
+		self.session.run(
+			self.train_op,
 			feed_dict={
 				self.X: states,
 				self.G: targets,
 				self.actions: actions
 			}
 		)
-		return c
 
 	def sample_action(self, x, eps):
 		if np.random.random() < eps:
@@ -142,32 +141,34 @@ def train(model, target_model, experience_replay_buffer, gamma, batch_size):
 	flags = np.invert(dones).astype(np.float32)
 	targets = rewards + flags * gamma * next_Q
 
-	# Update model
-	loss = model.update(states, actions, targets)
-	return loss
+	# Update the model
+	model.update(states, actions, targets)
 
 
-def play_one(env, total_t, experience_replay_buffer, model, target_model, gamma, batch_size, epsilon, epsilon_change, epsilon_min, target_update_period=TARGET_UPDATE_PERIOD):
-	t0 = datetime.now()
-
-	# reset the environment
+def initial_state(env):
 	observation = env.reset()
 	observation_small = downsample_image(observation)
 	state = np.stack([observation_small] * STACK_FRAMES, axis=0)
+	return state
+
+
+def play_one(env, total_steps, experience_replay_buffer, model, target_model, gamma, batch_size, epsilon, epsilon_change, epsilon_min, target_update_period=TARGET_UPDATE_PERIOD):
+	t0 = datetime.now()
+
+	# reset the environment
+	state = initial_state(env)
 	assert(state.shape == (STACK_FRAMES, IMG_SIZE, IMG_SIZE))
-	loss = None
 
 	total_time_training = 0
 	num_steps_in_episode = 0
 	episode_reward = 0
 
 	done = False
-
 	while not done:
 		# Update target network
-		if total_t % target_update_period == 0:
+		if total_steps % target_update_period == 0:
 			target_model.copy_from(model)
-			print('Copied model parameters to target network. total_t = %s, period = %s' % (total_t, target_update_period))
+			print('Copied model parameters to target network. total_steps = %s, update_period = %s' % (total_steps, target_update_period))
 
 		# Take action
 		action = model.sample_action(state, epsilon)
@@ -179,24 +180,27 @@ def play_one(env, total_t, experience_replay_buffer, model, target_model, gamma,
 		# Remove oldest experience if replay buffer is full
 		if len(experience_replay_buffer) == MAX_EXPERIENCES:
 			experience_replay_buffer.pop(0)
+			print('Experience Replay Buffer is full. Pop out the first element.')
 
 		# Save the latest experience
 		experience_replay_buffer.append((state, action, reward, next_state, done))
 
 		# Train the model, keep track of time
 		t0_2 = datetime.now()
-		loss = train(model, target_model, experience_replay_buffer, gamma, batch_size)
+		train(model, target_model, experience_replay_buffer, gamma, batch_size)
 		dt = datetime.now() - t0_2
 
 		total_time_training += dt.total_seconds()
 		num_steps_in_episode += 1
 
 		state = next_state
-		total_t += 1
+		total_steps += 1
 
 		epsilon = max(epsilon - epsilon_change, epsilon_min)
 
-	return total_t, episode_reward, (datetime.now() - t0), num_steps_in_episode, total_time_training / num_steps_in_episode, epsilon
+	duration = datetime.now() - t0
+
+	return total_steps, episode_reward, duration, num_steps_in_episode, total_time_training / num_steps_in_episode, epsilon
 
 
 def main():
@@ -204,9 +208,9 @@ def main():
 	conv_layer_sizes = [(32, 8, 4), (64, 4, 2), (64, 3, 1)]
 	hidden_layer_sizes = [512]
 	gamma = 0.99
-	batch_sz = 32
+	batch_size = 32
 	num_episodes = 10000
-	total_t = 0
+	total_steps = 0
 	experience_replay_buffer = []
 	episode_rewards = np.zeros(num_episodes)
 
@@ -247,10 +251,8 @@ def main():
 		target_model.set_session(sess)
 		sess.run(tf.global_variables_initializer())
 
-		print('Populating Experience Replay Buffer...')
-		observation = env.reset()
-		observation_small = downsample_image(observation)
-		state = np.stack([observation_small] * STACK_FRAMES, axis=0)
+		print('Generating Experience Replay Buffer...')
+		state = initial_state(env)
 		for i in range(MIN_EXPERIENCES):
 			action = np.random.choice(K)
 			observation, reward, done, info = env.step(action)
@@ -258,41 +260,43 @@ def main():
 			experience_replay_buffer.append((state, action, reward, next_state, done))
 
 			if done:
-				observation = env.reset()
-				observation_small = downsample_image(observation)
-				state = np.stack([observation_small] * STACK_FRAMES, axis=0)
+				state = initial_state(env)
 			else:
 				state = next_state
 
-		# Play a number of episodes and train!
+		# Play a number of episodes and train
 		print('Begin to play episodes and train...')
 		for i in range(num_episodes):
-			total_t, episode_reward, duration, num_steps_in_episode, time_per_step, epsilon = play_one(
+			total_steps, episode_reward, duration, num_steps_in_episode, time_per_step, epsilon = play_one(
 				env,
-				total_t,
+				total_steps,
 				experience_replay_buffer,
 				model,
 				target_model,
 				gamma,
-				batch_sz,
+				batch_size,
 				epsilon,
 				epsilon_change,
 				epsilon_min
 			)
 			episode_rewards[i] = episode_reward
 
-			last_100_avg = episode_rewards[max(0, i-99):(i+1)].mean()
+			last_100_avg = episode_rewards[max(0, i - 99):(i + 1)].mean()
 
 			print(
-				'Episode:', i,
-				'Duration:', duration,
-				'Num steps:', num_steps_in_episode,
-				'Reward:', episode_reward,
-				'Training time per step: %.3f' % time_per_step,
-				'Avg Reward (Last 100): %.3f' % last_100_avg,
+				'Episode: %d,' % i,
+				'Duration: %s,' % duration,
+				'Num steps in episode: %d,' % num_steps_in_episode,
+				'Episode reward: %s,' % episode_reward,
+				'Training time per step: %.3f sec,' % time_per_step,
+				'Avg Reward (Last 100): %.3f,' % last_100_avg,
 				'Epsilon: %.3f' % epsilon
 			)
 			sys.stdout.flush()
+
+		plt.plot(episode_rewards)
+		plt.title('Rewards / Episodes')
+		plt.show()
 
 		if 'monitor' in sys.argv:
 			filename = os.path.basename(__file__).split('.')[0]
@@ -300,12 +304,12 @@ def main():
 			env = wrappers.Monitor(env, monitor_dir)
 			play_one(
 				env,
-				total_t,
+				total_steps,
 				experience_replay_buffer,
 				model,
 				target_model,
 				gamma,
-				batch_sz,
+				batch_size,
 				epsilon,
 				epsilon_change,
 				epsilon_min
