@@ -60,12 +60,25 @@ class DQN:
 			Z = self.X / 255.0 # normalize to 0..1
 			Z = tf.transpose(Z, [0, 2, 3, 1])
 			for num_output_filters, filtersz, poolsz in conv_layer_sizes:
+				# without max_pool version
+				# Z = tf.contrib.layers.conv2d(
+				# 	Z,
+				# 	num_output_filters,
+				# 	filtersz,
+				# 	stride=poolsz,
+				# 	activation_fn=activation_conv
+				# )
+
+				# with max_pool version
 				Z = tf.contrib.layers.conv2d(
 					Z,
 					num_output_filters,
 					filtersz,
-					poolsz,
 					activation_fn=activation_conv
+				)
+				Z = tf.contrib.layers.max_pool2d(
+					Z,
+					poolsz
 				)
 
 			# fully-connected layers
@@ -205,7 +218,8 @@ def play_one(env, total_steps, experience_replay_buffer, model, target_model, ga
 
 def main():
 	# hyperparameters and initialize stuff
-	conv_layer_sizes = [(32, 8, 4), (64, 4, 2), (64, 3, 1)]
+	# conv_layer_sizes = [(32, 8, 4), (64, 4, 2), (64, 3, 1)] # without max_pool version
+	conv_layer_sizes = [(32, 5, 2), (64, 5, 2), (64, 3, 2)] # with max_pool version
 	hidden_layer_sizes = [512]
 	gamma = 0.99
 	batch_size = 32
@@ -310,9 +324,9 @@ def main():
 				target_model,
 				gamma,
 				batch_size,
-				epsilon,
-				epsilon_change,
-				epsilon_min
+				0,
+				0,
+				0
 			)
 
 
