@@ -199,6 +199,7 @@ def main():
 	session.run(init)
 	model.set_session(session)
 	tmodel.set_session(session)
+	tmodel.copy_from(model)
 
 	N = 500
 	totalrewards = np.empty(N)
