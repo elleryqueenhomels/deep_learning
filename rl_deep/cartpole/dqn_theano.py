@@ -193,6 +193,7 @@ def main():
 	hidden_layer_sizes = [200, 200]
 	model  = DQN(D, K, hidden_layer_sizes, gamma, activation=T.tanh)
 	tmodel = DQN(D, K, hidden_layer_sizes, gamma, activation=T.tanh)
+	tmodel.copy_from(model)
 
 	N = 500
 	totalrewards = np.empty(N)
