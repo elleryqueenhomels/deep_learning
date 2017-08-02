@@ -1,4 +1,4 @@
-# Use Deep Q-Network to solve Breakout
+# Use Deep Q-Network to solve Atari-Breakout
 
 import os
 import sys
