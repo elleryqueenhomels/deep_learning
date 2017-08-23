@@ -267,7 +267,7 @@ if __name__ == '__main__':
 	NONE_STATE = np.zeros(NUM_STATE)
 	del env_tmp
 
-	brain = Brain(NUM_STATE, NUM_ACTIONS, [16])
+	brain = Brain(NUM_STATE, NUM_ACTIONS, [64, 16, 4])
 
 	envs = [Environment(brain, NUM_ACTIONS) for i in range(NUM_ENV_THREADS)]
 	opts = [Optimizer(brain) for i in range(NUM_OPTIMIZERS)]
