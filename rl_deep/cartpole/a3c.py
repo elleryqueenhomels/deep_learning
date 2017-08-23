@@ -8,13 +8,13 @@ import numpy as np
 import tensorflow as tf
 
 
-# ----- Constants -----
+# ---------- Constants ----------
 ENV = 'CartPole-v0'
 
-RUN_TIME = 30 # seconds
+RUN_TIME = 60 # seconds
+THREAD_DELAY = 0.001 # seconds
 NUM_ENV_THREADS = 8
 NUM_OPTIMIZERS  = 2
-THREAD_DELAY = 0.001 # second
 
 GAMMA = 0.99
 
@@ -23,7 +23,7 @@ GAMMA_N = GAMMA ** N_STEP_RETURN
 
 EPS_START = 0.4
 EPS_STOP  = 0.1
-EPS_STEPS = 20000
+EPS_STEPS = 2000
 
 MIN_BATCH_SZ = 32
 MAX_BATCH_SZ = MIN_BATCH_SZ * 5
@@ -33,9 +33,10 @@ LOSS_VALUE = 0.5 # value loss coefficient
 LOSS_ENTROPY = 0.01 # entropy coefficient
 
 
+# ---------- Classes ----------
 class Brain:
 
-	def __init__(self, num_state, num_actions, hidden_layer_sizes):
+	def __init__(self, num_state, num_actions, hidden_layer_sizes, activation=tf.nn.relu):
 		self.train_queue = [[], [], [], [], []] # s, a, r, s', s'_terminal_mask
 		self.lock_queue = threading.Lock()
 
@@ -47,7 +48,7 @@ class Brain:
 		# build the graph
 		Z = self.states
 		for M in hidden_layer_sizes:
-			Z = tf.contrib.layers.fully_connected(Z, M, activation_fn=tf.nn.relu)
+			Z = tf.contrib.layers.fully_connected(Z, M, activation_fn=activation)
 
 		out_policy = tf.contrib.layers.fully_connected(Z, num_actions, activation_fn=tf.nn.softmax)
 		value      = tf.contrib.layers.fully_connected(Z, 1, activation_fn=lambda x: x)
@@ -97,7 +98,7 @@ class Brain:
 			self.train_queue[2].append(r)
 
 			if s2 is None:
-				self.train_queue[3].append(TERMINAL_STATE)
+				self.train_queue[3].append(NONE_STATE) # terminal state
 				self.train_queue[4].append(0.)
 			else:
 				self.train_queue[3].append(s2)
@@ -142,9 +143,6 @@ class Agent:
 		self.memory = [] # used for n-step return
 		self.R = 0.
 
-	def add_brain(self, brain):
-		self.brain = brain
-
 	def get_epsilon(self):
 		if self.step_count >= self.eps_steps:
 			return self.eps_end
@@ -160,7 +158,140 @@ class Agent:
 		else:
 			policy = self.brain.predict_policy(s)[0]
 
-			# a = np.argmax(policy)
-			a = np.random.choice(self.num_actions, p=policy)
+			a = np.argmax(policy)
+			# a = np.random.choice(self.num_actions, p=policy)
 
 			return a
+
+	def train(self, s, a, r, s2):
+		def get_sample(memory, n):
+			s0, a0, _, _    = memory[0]
+			_,  _,  _, sn_1 = memory[n-1]
+			return s0, a0, self.R, sn_1
+
+		self.memory.append((s, a, r, s2))
+
+		self.R = (self.R + GAMMA_N * r) / GAMMA
+
+		if s2 is None:
+			# handle the edge case - if an episode ends in < N-steps
+			if len(self.memory) < N_STEP_RETURN:
+				n = N_STEP_RETURN - len(self.memory)
+				self.R /= (GAMMA ** n)
+
+			while len(self.memory) > 0:
+				n = len(self.memory)
+				s, a, r, s2 = get_sample(self.memory, n)
+				self.brain.train_push(s, a, r, s2)
+
+				self.R = (self.R - self.memory[0][2]) / GAMMA
+				self.memory.pop(0)
+			self.R = 0.
+
+		if len(self.memory) >= N_STEP_RETURN:
+			s, a, r, s2 = get_sample(self.memory, N_STEP_RETURN)
+			self.brain.train_push(s, a, r, s2)
+
+			self.R = self.R - self.memory[0][2]
+			self.memory.pop(0)
+
+
+class Environment(threading.Thread):
+
+	def __init__(self, brain, num_actions, render=False, eps_start=EPS_START, eps_end=EPS_STOP, eps_steps=EPS_STEPS):
+		# threading.Thread.__init__(self)
+		super(Environment, self).__init__()
+
+		self.render = render
+		self.stop_signal = False
+		self.env = gym.make(ENV)
+		self.agent = Agent(brain, num_actions, eps_start, eps_end, eps_steps)
+
+	def run_episode(self):
+		s = self.env.reset()
+
+		total_reward = 0
+		while True:
+			time.sleep(THREAD_DELAY) # yield
+
+			if self.render:
+				self.env.render()
+
+			a = self.agent.select_action(s)
+			s2, r, done, info = self.env.step(a)
+
+			# terminal state
+			if done:
+				s2 = None
+
+			self.agent.train(s, a, r, s2)
+
+			s = s2
+			total_reward += r
+
+			if done or self.stop_signal:
+				break
+
+		print('Total reward: %s' % total_reward)
+
+	def run(self):
+		while not self.stop_signal:
+			self.run_episode()
+
+	def stop(self):
+		self.stop_signal = True
+
+
+class Optimizer(threading.Thread):
+
+	def __init__(self, brain):
+		# threading.Thread.__init__(self)
+		super(Optimizer, self).__init__()
+
+		self.brain = brain
+		self.stop_signal = False
+
+	def run(self):
+		while not self.stop_signal:
+			self.brain.optimize()
+
+	def stop(self):
+		self.stop_signal = True
+
+
+# ---------- Entry Point ----------
+if __name__ == '__main__':
+	env_tmp = gym.make(ENV)
+	NUM_STATE = env_tmp.observation_space.shape[0]
+	NUM_ACTIONS = env_tmp.action_space.n
+	NONE_STATE = np.zeros(NUM_STATE)
+	del env_tmp
+
+	brain = Brain(NUM_STATE, NUM_ACTIONS, [16])
+
+	envs = [Environment(brain, NUM_ACTIONS) for i in range(NUM_ENV_THREADS)]
+	opts = [Optimizer(brain) for i in range(NUM_OPTIMIZERS)]
+
+	for opt in opts:
+		opt.start()
+
+	for env in envs:
+		env.start()
+
+	time.sleep(RUN_TIME)
+
+	for env in envs:
+		env.stop()
+	for env in envs:
+		env.join()
+
+	for opt in opts:
+		opt.stop()
+	for opt in opts:
+		opt.join()
+
+	print('Training Finished!')
+
+	env_test = Environment(brain, NUM_ACTIONS, render=True, eps_start=0., eps_end=0.)
+	env_test.run()
+
