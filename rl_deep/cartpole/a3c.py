@@ -20,12 +20,12 @@ NUM_OPT_THREADS = 2 # number of optimizer threads
 
 GAMMA = 0.99 # discount factor
 
-N_STEP_RETURN = 8
+N_STEP_RETURN = 2 # can try 4 or 8 or any other n-step else
 GAMMA_N = GAMMA ** N_STEP_RETURN
 
 EPS_START = 0.4
 EPS_STOP  = 0.1
-EPS_STEPS = 2000
+EPS_STEPS = 10000
 
 MIN_BATCH_SZ = 32
 MAX_BATCH_SZ = MIN_BATCH_SZ * 5
