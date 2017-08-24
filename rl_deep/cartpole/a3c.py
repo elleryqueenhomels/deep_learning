@@ -11,6 +11,8 @@ import tensorflow as tf
 # ---------- Constants ----------
 ENV = 'CartPole-v0'
 
+HIDDEN_LAYER_SIZES = [64, 16, 4]
+
 RUN_TIME = 60 # seconds
 THREAD_DELAY = 0.001 # seconds
 NUM_ENV_THREADS = 8 # number of environment threads
@@ -117,7 +119,7 @@ class Brain:
 			s, a, r, s2, s_mask = self.train_queue
 			self.train_queue = [ [], [], [], [], [] ]
 
-		s, a, r, s2, s_mask = map(np.vstack, [s, a, r, s2, s_mask])
+		s, a, r, s2, s_mask = map(np.array, [s, a, r, s2, s_mask])
 
 		if len(s) > MAX_BATCH_SZ:
 			print('Optimizer alert! Minimizing batch of %d samples!' % len(s))
@@ -267,7 +269,7 @@ if __name__ == '__main__':
 	NONE_STATE = np.zeros(NUM_STATE)
 	del env_tmp
 
-	brain = Brain(NUM_STATE, NUM_ACTIONS, [64, 16, 4])
+	brain = Brain(NUM_STATE, NUM_ACTIONS, HIDDEN_LAYER_SIZES)
 
 	envs = [Environment(brain, NUM_ACTIONS) for i in range(NUM_ENV_THREADS)]
 	opts = [Optimizer(brain) for i in range(NUM_OPT_THREADS)]
