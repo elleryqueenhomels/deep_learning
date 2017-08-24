@@ -13,10 +13,10 @@ ENV = 'CartPole-v0'
 
 RUN_TIME = 60 # seconds
 THREAD_DELAY = 0.001 # seconds
-NUM_ENV_THREADS = 8
-NUM_OPTIMIZERS  = 2
+NUM_ENV_THREADS = 8 # number of environment threads
+NUM_OPT_THREADS = 2 # number of optimizer threads
 
-GAMMA = 0.99
+GAMMA = 0.99 # discount factor
 
 N_STEP_RETURN = 8
 GAMMA_N = GAMMA ** N_STEP_RETURN
@@ -37,7 +37,7 @@ LOSS_ENTROPY = 0.01 # entropy coefficient
 class Brain:
 
 	def __init__(self, num_state, num_actions, hidden_layer_sizes, activation=tf.nn.relu):
-		self.train_queue = [[], [], [], [], []] # s, a, r, s', s'_terminal_mask
+		self.train_queue = [ [], [], [], [], [] ] # s, a, r, s', s'_terminal_mask
 		self.lock_queue = threading.Lock()
 
 		# placeholders
@@ -115,7 +115,7 @@ class Brain:
 				return
 
 			s, a, r, s2, s_mask = self.train_queue
-			self.train_queue = [[], [], [], [], []]
+			self.train_queue = [ [], [], [], [], [] ]
 
 		s, a, r, s2, s_mask = map(np.vstack, [s, a, r, s2, s_mask])
 
@@ -270,7 +270,7 @@ if __name__ == '__main__':
 	brain = Brain(NUM_STATE, NUM_ACTIONS, [64, 16, 4])
 
 	envs = [Environment(brain, NUM_ACTIONS) for i in range(NUM_ENV_THREADS)]
-	opts = [Optimizer(brain) for i in range(NUM_OPTIMIZERS)]
+	opts = [Optimizer(brain) for i in range(NUM_OPT_THREADS)]
 
 	for opt in opts:
 		opt.start()
