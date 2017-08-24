@@ -54,7 +54,7 @@ class Brain:
 
 		out_policy = tf.contrib.layers.fully_connected(Z, num_actions, activation_fn=tf.nn.softmax)
 		value      = tf.contrib.layers.fully_connected(Z, 1, activation_fn=lambda x: x)
-		out_value  = tf.contrib.layers.flatten(value)
+		out_value  = tf.reshape(value, [-1])
 
 		self.predict_p = out_policy
 		self.predict_v = out_value
