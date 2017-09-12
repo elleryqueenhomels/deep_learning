@@ -20,7 +20,7 @@ from replay_memory import PrioritizedReplayMemory
 
 
 # ------------------ Constants ------------------
-GAME = 'Breakout-v0'
+GAME = 'Seaquest-v0'
 
 BRAIN_FILE  = 'DDQN_PER_' + GAME[:-3] + '.h5'
 TRAIN_BRAIN = True
@@ -201,8 +201,8 @@ class Environment:
     def __init__(self, game):
         self.env = gym.make(game)
 
-        self.observation_shape = env.observation_space.shape
-        self.num_action = env.action_space.n
+        self.observation_shape = self.env.observation_space.shape
+        self.num_action = self.env.action_space.n
 
     def initial_state(self):
         observation = self.env.reset()
