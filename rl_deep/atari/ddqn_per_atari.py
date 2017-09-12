@@ -213,8 +213,8 @@ class Environment:
     def update_state(self, state, observation):
         image = process_image(observation)
         image = np.expand_dims(image, axis=0)
-        state = np.append(state[1:], image, axis=0)
-        return state
+        next_state = np.append(state[1:], image, axis=0)
+        return next_state
 
     def train_one_episode(self, agent):
         state = self.initial_state()
