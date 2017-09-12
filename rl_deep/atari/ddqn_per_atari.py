@@ -2,23 +2,30 @@
 # to solve Atari Games
 
 
-from __future__ import division, print_function
+from __future__ import print_function
+from __future__ import division
+from builtins import input
 
 import gym
 import numpy as np
 import tensorflow as tf
 
 from keras import backend as K
-from keras.models import Sequential
-from keras.layers import Permute, Conv2D, Flatten, Dense
 from keras.optimizers import RMSprop
+from keras.models import Sequential, load_model
+from keras.layers import Permute, Conv2D, Flatten, Dense
 
 from scipy.misc import imresize
 from replay_memory import PrioritizedReplayMemory
 
 
 # ------------------ Constants ------------------
-ENV = 'Breakout-v0'
+GAME = 'Breakout-v0'
+
+BRAIN_FILE  = 'DDQN_PER_' + GAME[:-3] + '.h5'
+TRAIN_BRAIN = True
+
+TRAIN_EPISODES = 500
 
 IMAGE_WIDTH  = 84
 IMAGE_HEIGHT = 84
@@ -29,18 +36,17 @@ HUBER_LOSS_DELTA = 2.0
 LEARNING_RATE = 0.00025
 BATCH_SZ = 32
 
+GAMMA = 0.99
+UPDATE_TARGET_FREQUENCY = 10000
+
 MEMORY_CAPACITY = 200000
 ALPHA = 0.6
-
-GAMMA = 0.99
 
 MAX_EPSILON = 1.0
 MIN_EPSILON = 0.1
 
 EXPLORATION_STOP = 500000 # at this step epsilon will be 0.1
 LAMBDA = -np.log(0.01) / EXPLORATION_STOP # speed of decay
-
-UPDATE_TARGET_FREQUENCY = 10000
 
 
 # ------------------ Utilities ------------------
@@ -62,15 +68,8 @@ def process_image(img):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b # the effective luminance of a pixel
 
-    out = gray.astype('float32') / 128 - 1 # normalize
+    out = gray.astype(np.float32) / 127.5 - 1 # normalize
     return out
-
-
-def update_state(state, image):
-    image = process_image(image)
-    image = np.expand_dims(image, axis=0)
-    state = np.append(state[1:], image, axis=0)
-    return state
 
 
 # ------------------ Classes ------------------
@@ -82,7 +81,7 @@ class Brain:
 
         self.model = self.create_model()
         self.target_model = self.create_model() # target network
-        # self.update_target_model()
+        self.update_target_model()
 
     def create_model(self):
         model = Sequential()
@@ -144,6 +143,13 @@ class Brain:
 
         return td_errors
 
+    def save(self, path):
+        self.model.save(path)
+
+    def load(self, path):
+        self.model = load_model(path)
+        self.update_target_model()
+
 
 class Agent:
 
@@ -152,7 +158,7 @@ class Agent:
         self.num_action = num_action
 
         self.brain  = Brain(num_state, num_action)
-        self.memory = PrioritizedReplayMemory(MEMORY_CAPACITY, alpha=ALPHA)
+        self.memory = PrioritizedReplayMemory(MEMORY_CAPACITY, alpha=ALPHA, eps=1e-2)
 
         self.steps = 0
         self.epsilon = MAX_EPSILON
@@ -183,8 +189,111 @@ class Agent:
             td_errors = self.brain.train(states, actions, rewards, next_states, dones)
             self.memory.update(indices, td_errors)
 
+    def save_brain(self, path):
+        self.brain.save(path)
 
-def play_one_episode(env, agent, render=False):
-    # still under-development
-    pass
+    def load_brain(self, path):
+        self.brain.load(path)
+
+
+class Environment:
+
+    def __init__(self, game):
+        self.env = gym.make(game)
+
+        self.observation_shape = env.observation_space.shape
+        self.num_action = env.action_space.n
+
+    def initial_state(self):
+        observation = self.env.reset()
+        image = process_image(observation)
+        state = np.stack([image] * IMAGE_STACK, axis=0)
+        return state
+
+    def update_state(self, state, observation):
+        image = process_image(observation)
+        image = np.expand_dims(image, axis=0)
+        state = np.append(state[1:], image, axis=0)
+        return state
+
+    def train_one_episode(self, agent):
+        state = self.initial_state()
+
+        done = False
+        total_reward = 0
+        while not done:
+            action = agent.select_action(state)
+
+            observation, reward, done, info = self.env.step(action)
+            next_state = self.update_state(state, observation)
+
+            agent.train(state, action, reward, next_state, done)
+
+            state = next_state
+            total_reward += reward
+
+        return total_reward
+
+    def test_one_episode(self, agent, render=True):
+        state = self.initial_state()
+
+        done = False
+        total_reward = 0
+        while not done:
+            if render:
+                self.env.render()
+
+            action = agent.select_action(state)
+
+            observation, reward, done, info = self.env.step(action)
+            next_state = self.update_state(state, observation)
+
+            state = next_state
+            total_reward += reward
+
+        return total_reward
+
+
+# ------------------ Entry Point ------------------
+if __name__ == '__main__':
+    env = Environment(GAME)
+
+    num_state  = (IMAGE_STACK, IMAGE_HEIGHT, IMAGE_WIDTH)
+    num_action = env.num_action
+
+    agent = Agent(num_state, num_action)
+
+    if TRAIN_BRAIN:
+        try:
+            total_rewards = np.zeros(TRAIN_EPISODES)
+
+            for n in range(TRAIN_EPISODES):
+                total_reward = env.train_one_episode(agent)
+                total_rewards[n] = total_reward
+
+                if n % 10 == 0:
+                    print('episode: %d, current reward: %s, last 100 episodes avg reward: %s' % (n, total_reward, total_rewards[max(0, n-99):(n+1)].mean()))
+
+            print('avg reward for last 100 episodes: %s' % total_rewards[-100:].mean())
+        finally:
+            agent.save_brain(BRAIN_FILE)
+            print('Agent saves brain successfully! <brain_file: %s>' % BRAIN_FILE)
+    else:
+        from os.path import isfile
+        
+        if isfile(BRAIN_FILE):
+            agent.load_brain(BRAIN_FILE)
+            print('Agent loads brain successfully! ...')
+        else:
+            print('Brain file <%s> not found...' % BRAIN_FILE)
+
+    # test agent with trained brain
+    agent.epsilon = 0.0
+    while True:
+        total_reward = env.test_one_episode(agent)
+        print('Reward:', total_reward)
+
+        input_str = input('Play again? [Y/N]')
+        if input_str in ('n', 'N'):
+            break
 
