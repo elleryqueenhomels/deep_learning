@@ -48,6 +48,9 @@ MIN_EPSILON = 0.1
 EXPLORATION_STOP = 500000 # at this step epsilon will be 0.1
 LAMBDA = -np.log(0.01) / EXPLORATION_STOP # speed of decay
 
+MIN_REWARD = -1.0
+MAX_REWARD =  1.0
+
 
 # ------------------ Utilities ------------------
 def huber_loss(y_true, y_pred):
@@ -226,6 +229,7 @@ class Environment:
 
             observation, reward, done, info = self.env.step(action)
             next_state = self.update_state(state, observation)
+            reward = np.clip(reward, MIN_REWARD, MAX_REWARD)
 
             agent.train(state, action, reward, next_state, done)
 
@@ -247,6 +251,7 @@ class Environment:
 
             observation, reward, done, info = self.env.step(action)
             next_state = self.update_state(state, observation)
+            reward = np.clip(reward, MIN_REWARD, MAX_REWARD)
 
             state = next_state
             total_reward += reward
