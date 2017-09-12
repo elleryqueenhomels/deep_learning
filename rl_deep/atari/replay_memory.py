@@ -67,7 +67,7 @@ class PrioritizedReplayMemory:
         return samples, indices, priorities
 
     def update(self, idx, td_error):
-        if type(idx) is list:
+        if isinstance(idx, list):
             for i in range(len(idx)):
                 priority = self._get_priority(td_error[i])
                 self.tree.update(idx[i], priority)
