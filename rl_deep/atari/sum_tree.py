@@ -10,7 +10,7 @@ class SumTree:
         self.is_full = False
         self.write_index = 0
         self.capacity = capacity
-        self.tree = np.zeros(2*capacity - 1)
+        self.tree = np.zeros(2 * capacity - 1)
         self.data = np.zeros(capacity, dtype=object)
 
     def _propagate(self, idx, change):
