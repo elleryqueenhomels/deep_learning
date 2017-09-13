@@ -11,9 +11,9 @@ import numpy as np
 import tensorflow as tf
 
 from keras import backend as K
-from keras.optimizers import RMSprop
 from keras.models import Sequential, load_model
 from keras.layers import Permute, Conv2D, Flatten, Dense
+from keras.optimizers import RMSprop, TFOptimizer
 
 from scipy.misc import imresize
 from replay_memory import PrioritizedReplayMemory
@@ -25,7 +25,7 @@ GAME = 'Seaquest-v0'
 BRAIN_FILE  = 'DDQN_PER_' + GAME[:-3] + '.h5'
 TRAIN_BRAIN = True
 
-TRAIN_EPISODES = 500
+TRAIN_EPISODES = 800
 
 IMAGE_WIDTH  = 84
 IMAGE_HEIGHT = 84
@@ -34,19 +34,21 @@ IMAGE_STACK  = 4
 HUBER_LOSS_DELTA = 2.0
 
 LEARNING_RATE = 0.00025
+MOMENTUM = 0.95
 BATCH_SZ = 32
 
 GAMMA = 0.99
 UPDATE_TARGET_FREQUENCY = 10000
 
 MEMORY_CAPACITY = 200000
-ALPHA = 0.6
+MEMORY_ALPHA    = 0.6
+MEMORY_EPS      = 0.01
 
 MAX_EPSILON = 1.0
 MIN_EPSILON = 0.1
 
 EXPLORATION_STOP = 500000 # at this step epsilon will be 0.1
-LAMBDA = -np.log(0.01) / EXPLORATION_STOP # speed of decay
+EPSILON_DECAY    = (MIN_EPSILON - MAX_EPSILON) / EXPLORATION_STOP
 
 MIN_REWARD = -1.0
 MAX_REWARD =  1.0
@@ -97,7 +99,8 @@ class Brain:
         model.add(Dense(units=512, activation='relu'))
         model.add(Dense(units=self.num_action, activation=None))
 
-        optim = RMSprop(lr=LEARNING_RATE)
+        # optim = RMSprop(lr=LEARNING_RATE)
+        optim = TFOptimizer(tf.train.RMSPropOptimizer(LEARNING_RATE, momentum=MOMENTUM))
         model.compile(loss=huber_loss, optimizer=optim)
 
         return model
@@ -161,7 +164,7 @@ class Agent:
         self.num_action = num_action
 
         self.brain  = Brain(num_state, num_action)
-        self.memory = PrioritizedReplayMemory(MEMORY_CAPACITY, alpha=ALPHA, eps=1e-2)
+        self.memory = PrioritizedReplayMemory(MEMORY_CAPACITY, alpha=MEMORY_ALPHA, eps=MEMORY_EPS)
 
         self.steps = 0
         self.epsilon = MAX_EPSILON
@@ -182,7 +185,7 @@ class Agent:
 
         # slowly decrease epsilon based on experience
         self.steps += 1
-        self.epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * np.exp(-LAMBDA * self.steps)
+        self.epsilon = max(MIN_EPSILON, MAX_EPSILON + EPSILON_DECAY * self.steps)
 
         # train the brain if the memory has enough experience
         if self.memory.current_length() > BATCH_SZ:
