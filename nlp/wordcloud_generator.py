@@ -38,6 +38,7 @@ def create_wordcloud():
         article = article.replace('\r\n', ' ')
         article = article.replace('\r', ' ')
         article = article.replace('\n', ' ')
+        article = article.replace('\t', ' ')
 
     if args.contain_chinese:
         wordcloud = WordCloud(width=args.width,
